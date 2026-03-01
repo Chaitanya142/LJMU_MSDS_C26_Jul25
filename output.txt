@@ -1,0 +1,532 @@
+
+=================================================================
+  STEP 1 — Data Loading, Feature Engineering, Risk Labelling
+=================================================================
+[1/8] Loading and preprocessing bank dataset...
+      Total customers : 12500
+      Risk distribution:
+risk_label
+High         3125
+Low          3125
+Medium       3124
+Very_High    1563
+Very_Low     1563
+
+  Sample User Risk Scores (first 10 customers):
+  Customer_ID          Account_Type      Risk_Score Risk_Label  
+  --------------------------------------------------------------
+  CUS_0x1000           Customer              5.7198 Medium      
+  CUS_0x1009           Customer              5.0674 Medium      
+  CUS_0x100b           Customer              7.7196 Very_High   
+  CUS_0x1011           Customer              6.5060 High        
+  CUS_0x1013           Customer              6.6664 High        
+  CUS_0x1015           Customer              4.9733 Medium      
+  CUS_0x1018           Customer              5.4799 Medium      
+  CUS_0x1026           Customer              8.7380 Very_High   
+  CUS_0x102d           Customer              8.1541 Very_High   
+  CUS_0x102e           Customer              5.9142 Medium      
+
+=================================================================
+  STEP 2 — Customer Split (65% Central / 30% FL / 5% Demo Holdout)
+=================================================================
+      Central split : 8125 customers  (65 % of total)
+      FL split      : 3750 customers  (30 % of total)
+      Demo holdout  : 625 customers  ( 5 % of total, unseen)
+      Risk distribution Central:
+risk_label
+Medium       2045
+High         2006
+Low          2002
+Very_Low     1062
+Very_High    1010
+      Demo customer list saved → /Users/chaitanya/Downloads/Submission/Code/20Feb26/models/demo_customers.csv
+
+=================================================================
+  STEP 3 — Central Model Training
+=================================================================
+[3/8] Training MLP — 6500 train | 1625 val
+[Central] Training on device: cpu
+[Central] Features: 15 | Focal Loss γ=2.0 | Label smoothing α=0.05 | Early stop patience=8
+  Epoch   1/40  train_loss=0.0196  val_loss=0.0108  val_acc=0.4455  ★ best
+  Epoch   2/40  train_loss=0.0111  val_loss=0.0070  val_acc=0.5514  ★ best
+  Epoch   3/40  train_loss=0.0071  val_loss=0.0043  val_acc=0.7662  ★ best
+  Epoch   4/40  train_loss=0.0049  val_loss=0.0026  val_acc=0.8265  ★ best
+  Epoch   5/40  train_loss=0.0036  val_loss=0.0018  val_acc=0.8511  ★ best
+  Epoch   6/40  train_loss=0.0028  val_loss=0.0015  val_acc=0.8646  ★ best
+  Epoch   7/40  train_loss=0.0025  val_loss=0.0013  val_acc=0.8868  ★ best
+  Epoch   9/40  train_loss=0.0024  val_loss=0.0013  val_acc=0.8972  ★ best
+  Epoch  10/40  train_loss=0.0024  val_loss=0.0012  val_acc=0.8997  ★ best
+  Epoch  11/40  train_loss=0.0023  val_loss=0.0012  val_acc=0.9022  ★ best
+  Epoch  15/40  train_loss=0.0019  val_loss=0.0011  val_acc=0.9034  ★ best
+  Epoch  16/40  train_loss=0.0022  val_loss=0.0012  val_acc=0.9231  ★ best
+  Epoch  17/40  train_loss=0.0019  val_loss=0.0011  val_acc=0.9298  ★ best
+  Epoch  20/40  train_loss=0.0020  val_loss=0.0011  val_acc=0.9034
+  Epoch  21/40  train_loss=0.0019  val_loss=0.0011  val_acc=0.9348  ★ best
+  Epoch  25/40  train_loss=0.0018  val_loss=0.0010  val_acc=0.9212
+  Epoch  27/40  train_loss=0.0018  val_loss=0.0010  val_acc=0.9434  ★ best
+  Epoch  30/40  train_loss=0.0019  val_loss=0.0010  val_acc=0.9218
+  Epoch  33/40  train_loss=0.0017  val_loss=0.0010  val_acc=0.9458  ★ best
+  Epoch  35/40  train_loss=0.0016  val_loss=0.0010  val_acc=0.9200
+  Epoch  40/40  train_loss=0.0016  val_loss=0.0009  val_acc=0.9446
+[Central] Best val accuracy: 0.9458 (stopped at epoch 40/40)
+[Central] Model saved → /Users/chaitanya/Downloads/Submission/Code/20Feb26/models/central_risk_model.pt
+
+============================================================
+Classification Report
+============================================================
+              precision    recall  f1-score   support
+
+        High       0.99      0.89      0.94       401
+         Low       0.95      0.94      0.95       400
+      Medium       0.97      0.95      0.96       409
+   Very_High       0.86      1.00      0.92       202
+    Very_Low       0.91      1.00      0.95       213
+
+    accuracy                           0.95      1625
+   macro avg       0.94      0.96      0.94      1625
+weighted avg       0.95      0.95      0.95      1625
+
+Confusion Matrix:
+[[357   0  10  34   0]
+ [  0 377   2   0  21]
+ [  2  18 389   0   0]
+ [  0   0   0 202   0]
+ [  0   1   0   0 212]]
+Saved training history plot → models/plot_central_training.png
+Saved confusion matrix → models/plot_central_confusion.png
+
+=================================================================
+  TEST CASES — Risk Appetite for Edge-Case Users
+=================================================================
+
+  Profile                      Predicted Risk     Confidence
+  ------------------------------------------------------------
+  High Income Investor         Very_High              99.7%
+  Over-indebted Low Earner     Very_Low               99.5%
+  Balanced Salaried            Low                    49.2%
+  Young Aggressive             Very_High              94.0%
+  Retiree Conservative         Low                    65.5%
+
+=================================================================
+  STEP 4 — Federated Learning Simulation
+=================================================================
+[4/8] Incremental FL — 3750 devices  |  5 waves × 3 rounds = 15 total  |  DP=True
+      Wave 1 starts with 750 users, adding ~750 more each wave.
+
+[FL-Incremental] 3750 total devices  |  5 waves × 3 rounds = 15 total rounds  |  DP σ=1.0  |  FedProx µ₀=0.01 (adaptive decay)
+[FL-Incremental] Label strategy: pseudo-labels from global_model (no central labelling)
+
+─────────────────────────────────────────────────────────────────
+  WAVE 1/5  ──  750 new users onboarded
+  Global model pseudo-label accuracy on new arrivals: 0.9400
+  (pool: 750 total, 225 sampled/round)
+─────────────────────────────────────────────────────────────────
+  Round  1/15  [Wave 1  local 1/3]  avg_loss=0.4243  acc_vs_oracle=0.9467  active=188/225  mu=0.0100
+  Round  2/15  [Wave 1  local 2/3]  avg_loss=0.4275  acc_vs_oracle=0.9511  active=197/225  mu=0.0090
+  Round  3/15  [Wave 1  local 3/3]  avg_loss=0.4102  acc_vs_oracle=0.9467  active=197/225  mu=0.0081
+  ↳ Wave 1 complete — pool=750 users  pseudo_label_acc=0.9400  end_acc_vs_oracle=0.9467
+
+─────────────────────────────────────────────────────────────────
+  WAVE 2/5  ──  750 new users onboarded
+  Global model pseudo-label accuracy on new arrivals: 0.9213
+  (pool: 1500 total, 450 sampled/round)
+─────────────────────────────────────────────────────────────────
+  Round  4/15  [Wave 2  local 1/3]  avg_loss=0.4125  acc_vs_oracle=0.9511  active=394/450  mu=0.0073
+  Round  5/15  [Wave 2  local 2/3]  avg_loss=0.4141  acc_vs_oracle=0.9400  active=366/450  mu=0.0066
+  Round  6/15  [Wave 2  local 3/3]  avg_loss=0.4227  acc_vs_oracle=0.9267  active=389/450  mu=0.0059
+  ↳ Wave 2 complete — pool=1500 users  pseudo_label_acc=0.9213  end_acc_vs_oracle=0.9267
+
+─────────────────────────────────────────────────────────────────
+  WAVE 3/5  ──  750 new users onboarded
+  Global model pseudo-label accuracy on new arrivals: 0.9173
+  (pool: 2250 total, 675 sampled/round)
+─────────────────────────────────────────────────────────────────
+  Round  7/15  [Wave 3  local 1/3]  avg_loss=0.4223  acc_vs_oracle=0.9289  active=576/675  mu=0.0053
+  Round  8/15  [Wave 3  local 2/3]  avg_loss=0.4255  acc_vs_oracle=0.9289  active=564/675  mu=0.0048
+  Round  9/15  [Wave 3  local 3/3]  avg_loss=0.4287  acc_vs_oracle=0.9274  active=580/675  mu=0.0043
+  ↳ Wave 3 complete — pool=2250 users  pseudo_label_acc=0.9173  end_acc_vs_oracle=0.9274
+
+─────────────────────────────────────────────────────────────────
+  WAVE 4/5  ──  750 new users onboarded
+  Global model pseudo-label accuracy on new arrivals: 0.9307
+  (pool: 3000 total, 900 sampled/round)
+─────────────────────────────────────────────────────────────────
+  Round 10/15  [Wave 4  local 1/3]  avg_loss=0.4347  acc_vs_oracle=0.9211  active=787/900  mu=0.0039
+  Round 11/15  [Wave 4  local 2/3]  avg_loss=0.4127  acc_vs_oracle=0.9278  active=761/900  mu=0.0035
+  Round 12/15  [Wave 4  local 3/3]  avg_loss=0.4208  acc_vs_oracle=0.9300  active=770/900  mu=0.0031
+  ↳ Wave 4 complete — pool=3000 users  pseudo_label_acc=0.9307  end_acc_vs_oracle=0.9300
+
+─────────────────────────────────────────────────────────────────
+  WAVE 5/5  ──  750 new users onboarded
+  Global model pseudo-label accuracy on new arrivals: 0.9347
+  (pool: 3750 total, 1125 sampled/round)
+─────────────────────────────────────────────────────────────────
+  Round 13/15  [Wave 5  local 1/3]  avg_loss=0.4095  acc_vs_oracle=0.9324  active=955/1125  mu=0.0028
+  Round 14/15  [Wave 5  local 2/3]  avg_loss=0.4137  acc_vs_oracle=0.9289  active=945/1125  mu=0.0025
+  Round 15/15  [Wave 5  local 3/3]  avg_loss=0.4193  acc_vs_oracle=0.9351  active=979/1125  mu=0.0023
+  ↳ Wave 5 complete — pool=3750 users  pseudo_label_acc=0.9347  end_acc_vs_oracle=0.9351
+
+[FL-Incremental] Training complete  →  15 rounds across 5 waves
+[FL-Incremental] Global model saved → /Users/chaitanya/Downloads/Submission/Code/20Feb26/models/fl_global_risk_model.pt
+
+  Wave summary (pseudo-label accuracy = how well global model labelled new arrivals):
+  Wave    New Users  Pool Size   Rounds  PseudoAcc  EndAcc(oracle)
+  ──────────────────────────────────────────────────────────────────
+  1             750        750      1–3     0.9400          0.9467
+  2             750       1500      4–6     0.9213          0.9267
+  3             750       2250      7–9     0.9173          0.9274
+  4             750       3000    10–12     0.9307          0.9300
+  5             750       3750    13–15     0.9347          0.9351
+
+  Central model accuracy on FL split : 0.9285
+  FL global  model accuracy          : 0.9288
+  Improvement                        : +0.03 pp
+Saved FL history plot → models/plot_fl_loss.png
+
+=================================================================
+  STEP 5 — Differential Privacy Budget
+=================================================================
+[5/8] Computing DP privacy budget (ε, δ) ...
+============================================================
+  Differential Privacy Budget
+============================================================
+  Noise multiplier (σ)         : 1.0
+  Gradient clip norm (C)       : 1.0
+  Noise std per gradient       : 1.00
+  FL rounds                    : 15
+  Local epochs per round       : 5
+  Sampling fraction q          : 0.3
+
+  ╔══════════════════════════════╗
+  ║  ε (epsilon) = 10.0087    ║
+  ║  δ (delta)   = 1.0e-05    ║
+  ╚══════════════════════════════╝
+
+  Privacy Quality              : Formal ε=10.01; privacy noise active
+  ε per round (expected)       : 2.8929
+
+  σ → ε Trade-off (same FL config):
+    σ=0.3 → ε=33.5129  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+    σ=0.5 → ε=19.4329  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+    σ=0.7 → ε=14.6456  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+    σ=1.0 → ε=10.0087  ▓▓▓▓▓▓▓▓▓▓
+    σ=1.5 → ε= 7.1659  ▓▓▓▓▓▓▓
+    σ=2.0 → ε= 5.6259  ▓▓▓▓▓
+
+  Note: ε measures worst-case distinguishability risk.
+  Gradient noise (σ·C) is always added regardless of ε value.
+  Higher σ → lower ε (stronger formal guarantee) at cost of accuracy.
+============================================================
+
+=================================================================
+  STEP 6 — KMeans Cluster Analysis (Silhouette Score)
+=================================================================
+[6/8] KMeans cluster analysis SKIPPED (--skip-cluster).
+      Recommendations remain fully functional via RiskMLP + XGB/RF ensemble.
+Saved per-user risk plot → models/plot_per_user_risk.png
+
+=================================================================
+  STEP 7 — Fund Recommendations + GPT Explanations
+=================================================================
+[7/8] Loading historical NAV metrics (parquet) …
+[NavHistory] Loading cached metrics from /Users/chaitanya/Downloads/Submission/Code/20Feb26/models/nav_metrics.csv …
+[NavHistory] Loaded 14,427 scheme metrics from cache.
+      NAV metrics ready: 14,427 schemes
+[7/8] Training XGBoost + Random Forest + LightGBM fund-scoring ensemble ...
+[Ensemble] Building fund features … (target: real-return history)
+[Ensemble] Training on 14270 funds | 19 features
+[Ensemble] Random Forest   — RMSE=0.0029  R²=0.9980  CV-R²=0.9602±0.0496
+[Ensemble] XGBoost         — RMSE=0.0038  R²=0.9965  CV-R²=0.9772±0.0327
+[Ensemble] LightGBM        — RMSE=0.0032  R²=0.9975  CV-R²=0.9741±0.0388
+[Ensemble] Artefacts saved → /Users/chaitanya/Downloads/Submission/Code/20Feb26/models
+[Ensemble] Feature importance plot saved → /Users/chaitanya/Downloads/Submission/Code/20Feb26/models/plot_ensemble_feature_importance.png
+      Ensemble trained (+hist)  —  RF R²=0.9980  XGB R²=0.9965
+[7/8] Generating mutual fund recommendations ...
+
+  Per-User Fund Recommendations:
+  Customer             Risk Tier    Confidence  Top Fund
+  ------------------------------------------------------------------------------
+  CUS_0xd40            High             72.2%  ICICI Prudential Nifty Midcap 150 Index Fu
+  CUS_0x21b1           High             77.3%  ICICI Prudential Nifty Midcap 150 Index Fu
+  CUS_0x2dbc           Very_High        76.6%  ICICI Prudential Nifty 200 Momentum 30 Ind
+  CUS_0xb891           High             71.1%  ICICI Prudential Nifty Midcap 150 Index Fu
+  CUS_0x1cdb           High             73.5%  ICICI Prudential Nifty Midcap 150 Index Fu
+
+  GPT Fund Explanation Sample:
+  ------------------------------------------------------------
+  Customer : CUS_0xd40
+  Fund     : ICICI Prudential Nifty Midcap 150 Index Fund
+  Provider : rule_based
+
+  **ICICI Prudential Nifty Midcap 150 Index Fund** (ICICI Prudential Asset Management Company Limited)
+  
+  **Why this fund?**  Your risk profile 'High' aligns with 'Other Scheme - Index Funds'. Based on your profile (Indian retail investor).
+  
+  **Fund Snapshot:**
+  - Current NAV: ₹19.49
+  - Total AUM: ₹752 Cr (larger AUM = more established)
+  - Minimum Investment: ₹100
+  
+  **Investment Rationale:**  This equity fund targets long-term wealth creation. Expect short-term volatility for 5+ year goals.
+  
+  
+
+  GPT Validation: PASS ✓  (score=0.75)
+
+  Top-5 Funds by Risk Tier:
+
+  [Very_Low]
+    • ICICI Prudential Ultra Short term Fund                AUM ₹nan Cr
+    • ICICI Prudential Savings Fund                         AUM ₹nan Cr
+    • Nippon India Ultra Short Duration Fund                AUM ₹nan Cr
+
+  [Low]
+    • ICICI Prudential Multiple Yield Fund- Series 6 -1100  AUM ₹nan Cr
+    • ICICI Prudential Capital Protection Oriented Fund VI  AUM ₹nan Cr
+    • Reliance Fixed Horizon Fund XXIX- Series 9            AUM ₹nan Cr
+
+  [Medium]
+    • ICICI Prudential Nifty EV & New Age Automotive ETF    AUM ₹41 Cr
+    • ICICI Prudential BSE Liquid Rate ETF - Growth         AUM ₹764 Cr
+    • Nippon India BSE Sensex Next 30 ETF                   AUM ₹4 Cr
+
+  [High]
+    • ICICI Prudential Nifty Midcap 150 Index Fund          AUM ₹752 Cr
+    • ICICI Prudential Silver ETF FOF                       AUM ₹1,910 Cr
+    • Nippon India Nifty Alpha Low Volatility 30 Index Fun  AUM ₹335 Cr
+
+  [Very_High]
+    • ICICI Prudential Nifty 200 Momentum 30 Index Fund     AUM ₹391 Cr
+    • ICICI Prudential NASDAQ 100 Index Fund                AUM ₹623 Cr
+    • Nippon India Nifty Smallcap 250 Index Fund            AUM ₹615 Cr
+
+=================================================================
+  STEP 7b — Multi-Metric Risk Matrix (v3)
+=================================================================
+[7b] Decomposing risk into 4 sub-dimensions ...
+      Dimensions: ['Financial_Capacity', 'Behavioral_Tolerance', 'Time_Horizon', 'Credit_Health']
+      Sample (first 5 customers):
+      Customer_ID           Fin_Cap    Behav  Horizon   Credit  Composite
+      --------------------------------------------------------------------
+      CUS_0x1000              0.660    0.139    1.000    0.789     0.6471
+      CUS_0x1009              0.567    0.310    0.846    0.632     0.5888
+      CUS_0x100b              0.799    0.507    0.981    0.597     0.7208
+      CUS_0x1011              0.650    0.397    0.500    0.823     0.5924
+      CUS_0x1013              0.770    0.517    0.500    0.556     0.5857
+
+      Dimension Statistics:
+        Financial_Capacity         mean=0.580  std=0.179  min=0.000  max=1.000
+        Behavioral_Tolerance       mean=0.355  std=0.137  min=0.000  max=1.000
+        Time_Horizon               mean=0.654  std=0.271  min=0.000  max=1.000
+        Credit_Health              mean=0.662  std=0.128  min=0.000  max=1.000
+
+=================================================================
+  STEP 7c — Horizon-Based Fund Recommendations (v3)
+=================================================================
+[7c] Generating recommendations for 1yr / 3yr / 5yr / 10yr+ horizons ...
+
+  [1yr]  Equity=15%  Debt=85%  Funds=6
+    equity   ICICI Prudential Ultra Short term Fund     wt=5.00%  ₹25,000
+    equity   ICICI Prudential Savings Fund              wt=5.00%  ₹25,000
+    equity   ICICI Prudential Money Market Fund         wt=5.00%  ₹25,000
+    debt     ICICI Prudential Multiple Yield Fund- Se   wt=28.33%  ₹141,650
+
+  [3yr]  Equity=50%  Debt=50%  Funds=6
+    equity   ICICI Prudential Short Term Fund           wt=16.67%  ₹83,350
+    equity   ICICI Prudential Short Term Fund           wt=16.67%  ₹83,350
+    equity   ICICI Prudential Short Term Fund           wt=16.67%  ₹83,350
+    debt     ICICI Prudential Multiple Yield Fund- Se   wt=16.67%  ₹83,350
+
+  [5yr]  Equity=75%  Debt=25%  Funds=6
+    equity   ICICI Prudential Nifty Midcap 150 Index    wt=25.00%  ₹125,000
+    equity   ICICI Prudential Silver ETF FOF            wt=25.00%  ₹125,000
+    equity   Nippon India Nifty Alpha Low Volatility    wt=25.00%  ₹125,000
+    debt     ICICI Prudential Multiple Yield Fund- Se   wt=8.33%  ₹41,650
+
+  [10yr+]  Equity=85%  Debt=15%  Funds=6
+    equity   ICICI Prudential Nifty Midcap 150 Index    wt=28.33%  ₹141,650
+    equity   ICICI Prudential Silver ETF FOF            wt=28.33%  ₹141,650
+    equity   Nippon India Nifty Alpha Low Volatility    wt=28.33%  ₹141,650
+    debt     ICICI Prudential Multiple Yield Fund- Se   wt=5.00%  ₹25,000
+
+=================================================================
+  STEP 7d — Core-Satellite Diversified Portfolio (v3)
+=================================================================
+[7d] Building diversified portfolios across multiple risk brackets ...
+
+  [Low]  Brackets=3  Diversification=0.6479
+    Core=Low  Stability=Very_Low  Growth=Medium
+    Core         (Low       ) ICICI Prudential Multiple Yield Fund-    wt=20.00%  ₹100,000
+    Core         (Low       ) ICICI Prudential Capital Protection Or   wt=20.00%  ₹100,000
+    Core         (Low       ) Reliance Fixed Horizon Fund XXIX- Seri   wt=20.00%  ₹100,000
+    Stability    (Very_Low  ) ICICI Prudential Ultra Short term Fund   wt=6.67%  ₹33,350
+    Stability    (Very_Low  ) ICICI Prudential Savings Fund            wt=6.67%  ₹33,350
+    Stability    (Very_Low  ) Nippon India Ultra Short Duration Fund   wt=6.67%  ₹33,350
+    Growth       (Medium    ) ICICI Prudential Nifty EV & New Age Au   wt=6.67%  ₹33,350
+    Growth       (Medium    ) ICICI Prudential BSE Liquid Rate ETF -   wt=6.67%  ₹33,350
+    Growth       (Medium    ) Nippon India BSE Sensex Next 30 ETF      wt=6.67%  ₹33,350
+
+  [Medium]  Brackets=3  Diversification=0.6624
+    Core=Medium  Stability=Low  Growth=High
+    Core         (Medium    ) ICICI Prudential Nifty EV & New Age Au   wt=20.00%  ₹100,000
+    Core         (Medium    ) ICICI Prudential BSE Liquid Rate ETF -   wt=20.00%  ₹100,000
+    Core         (Medium    ) Nippon India BSE Sensex Next 30 ETF      wt=20.00%  ₹100,000
+    Stability    (Low       ) ICICI Prudential Multiple Yield Fund-    wt=6.67%  ₹33,350
+    Stability    (Low       ) ICICI Prudential Capital Protection Or   wt=6.67%  ₹33,350
+    Stability    (Low       ) Reliance Fixed Horizon Fund XXIX- Seri   wt=6.67%  ₹33,350
+    Growth       (High      ) ICICI Prudential Nifty Midcap 150 Inde   wt=6.67%  ₹33,350
+    Growth       (High      ) ICICI Prudential Silver ETF FOF          wt=6.67%  ₹33,350
+    Growth       (High      ) Nippon India Nifty Alpha Low Volatilit   wt=6.67%  ₹33,350
+
+  [High]  Brackets=3  Diversification=0.5056
+    Core=High  Stability=Medium  Growth=Very_High
+    Core         (High      ) ICICI Prudential Nifty Midcap 150 Inde   wt=20.00%  ₹100,000
+    Core         (High      ) ICICI Prudential Silver ETF FOF          wt=20.00%  ₹100,000
+    Core         (High      ) Nippon India Nifty Alpha Low Volatilit   wt=20.00%  ₹100,000
+    Stability    (Medium    ) ICICI Prudential Nifty EV & New Age Au   wt=6.67%  ₹33,350
+    Stability    (Medium    ) ICICI Prudential BSE Liquid Rate ETF -   wt=6.67%  ₹33,350
+    Stability    (Medium    ) Nippon India BSE Sensex Next 30 ETF      wt=6.67%  ₹33,350
+    Growth       (Very_High ) ICICI Prudential Nifty 200 Momentum 30   wt=6.67%  ₹33,350
+    Growth       (Very_High ) ICICI Prudential NASDAQ 100 Index Fund   wt=6.67%  ₹33,350
+    Growth       (Very_High ) Nippon India Nifty Smallcap 250 Index    wt=6.67%  ₹33,350
+
+=================================================================
+  STEP 7e — Full User Investment Profile (v3)
+=================================================================
+[7e] Core-satellite portfolios across all horizons + GenAI  (demo user: High risk, corpus ₹5,00,000) ...
+
+  Risk Tier : High
+  Corpus    : ₹500,000
+
+  ────────────────────────────────────────────────────────────────
+  1yr    HORIZON   Equity 15% / Debt 85%   Diversification = 0.5056
+  ────────────────────────────────────────────────────────────────
+  Core       (High         60%)    ICICI Prudential Nifty Midcap 150 Index Fu    ₹100,000
+                                   ICICI Prudential Silver ETF FOF               ₹100,000
+                                   Nippon India Nifty Alpha Low Volatility 30    ₹100,000
+  Stability  (Medium       20%)    ICICI Prudential Nifty EV & New Age Automo    ₹ 33,300
+                                   ICICI Prudential BSE Liquid Rate ETF - Gro    ₹ 33,300
+                                   Nippon India BSE Sensex Next 30 ETF           ₹ 33,300
+  Growth     (Very_High    20%)    ICICI Prudential Nifty 200 Momentum 30 Ind    ₹ 33,300
+                                   ICICI Prudential NASDAQ 100 Index Fund        ₹ 33,300
+                                   Nippon India Nifty Smallcap 250 Index Fund    ₹ 33,300
+
+  GenAI [rule_based]:
+    **1yr Portfolio — High Risk**
+    With a 1-year horizon, capital preservation takes precedence over growth. A debt-heavy allocation minimises drawdown risk during short-term volatility.
+    **Allocation — 15% Equity / 85% Debt:**
+    Core (High, 60%): ICICI Prudential Nifty Midcap 150 I & ICICI Prudential Silver ETF FOF | Stability (Medium, 20%): ICICI Prudential Nifty EV & New Age & ICICI Prudential BSE Liquid Rate ET | Growth (Very_High, 20%): ICICI Prudential Nifty 200 Momentum & ICICI Prudential NASDAQ 100 Index F
+    **Core-Satellite Logic:** The Core (60%) anchors the portfolio in the High tier for primary returns. The Stability satellite (20%) adds a downside buffer via a conservative tier, while the Growth satellite (20%) captures upside from a higher risk tier. This three-bracket structure reduces single-tier concentration risk and is aligned with BlackRock's Core-Satellite framework and Markowitz diversification principles.
+
+  ────────────────────────────────────────────────────────────────
+  3yr    HORIZON   Equity 50% / Debt 50%   Diversification = 0.5056
+  ────────────────────────────────────────────────────────────────
+  Core       (High         60%)    ICICI Prudential Nifty Midcap 150 Index Fu    ₹100,000
+                                   ICICI Prudential Silver ETF FOF               ₹100,000
+                                   Nippon India Nifty Alpha Low Volatility 30    ₹100,000
+  Stability  (Medium       20%)    ICICI Prudential Nifty EV & New Age Automo    ₹ 33,300
+                                   ICICI Prudential BSE Liquid Rate ETF - Gro    ₹ 33,300
+                                   Nippon India BSE Sensex Next 30 ETF           ₹ 33,300
+  Growth     (Very_High    20%)    ICICI Prudential Nifty 200 Momentum 30 Ind    ₹ 33,300
+                                   ICICI Prudential NASDAQ 100 Index Fund        ₹ 33,300
+                                   Nippon India Nifty Smallcap 250 Index Fund    ₹ 33,300
+
+  GenAI [rule_based]:
+    **3yr Portfolio — High Risk**
+    A 3-year horizon allows moderate equity exposure for inflation-beating returns while a strong debt allocation cushions against market corrections.
+    **Allocation — 50% Equity / 50% Debt:**
+    Core (High, 60%): ICICI Prudential Nifty Midcap 150 I & ICICI Prudential Silver ETF FOF | Stability (Medium, 20%): ICICI Prudential Nifty EV & New Age & ICICI Prudential BSE Liquid Rate ET | Growth (Very_High, 20%): ICICI Prudential Nifty 200 Momentum & ICICI Prudential NASDAQ 100 Index F
+    **Core-Satellite Logic:** The Core (60%) anchors the portfolio in the High tier for primary returns. The Stability satellite (20%) adds a downside buffer via a conservative tier, while the Growth satellite (20%) captures upside from a higher risk tier. This three-bracket structure reduces single-tier concentration risk and is aligned with BlackRock's Core-Satellite framework and Markowitz diversification principles.
+
+  ────────────────────────────────────────────────────────────────
+  5yr    HORIZON   Equity 75% / Debt 25%   Diversification = 0.5056
+  ────────────────────────────────────────────────────────────────
+  Core       (High         60%)    ICICI Prudential Nifty Midcap 150 Index Fu    ₹100,000
+                                   ICICI Prudential Silver ETF FOF               ₹100,000
+                                   Nippon India Nifty Alpha Low Volatility 30    ₹100,000
+  Stability  (Medium       20%)    ICICI Prudential Nifty EV & New Age Automo    ₹ 33,300
+                                   ICICI Prudential BSE Liquid Rate ETF - Gro    ₹ 33,300
+                                   Nippon India BSE Sensex Next 30 ETF           ₹ 33,300
+  Growth     (Very_High    20%)    ICICI Prudential Nifty 200 Momentum 30 Ind    ₹ 33,300
+                                   ICICI Prudential NASDAQ 100 Index Fund        ₹ 33,300
+                                   Nippon India Nifty Smallcap 250 Index Fund    ₹ 33,300
+
+  GenAI [rule_based]:
+    **5yr Portfolio — High Risk**
+    Over 5 years, equity volatility tends to average out. A balanced allocation targets meaningful real returns while debt provides a stability anchor.
+    **Allocation — 75% Equity / 25% Debt:**
+    Core (High, 60%): ICICI Prudential Nifty Midcap 150 I & ICICI Prudential Silver ETF FOF | Stability (Medium, 20%): ICICI Prudential Nifty EV & New Age & ICICI Prudential BSE Liquid Rate ET | Growth (Very_High, 20%): ICICI Prudential Nifty 200 Momentum & ICICI Prudential NASDAQ 100 Index F
+    **Core-Satellite Logic:** The Core (60%) anchors the portfolio in the High tier for primary returns. The Stability satellite (20%) adds a downside buffer via a conservative tier, while the Growth satellite (20%) captures upside from a higher risk tier. This three-bracket structure reduces single-tier concentration risk and is aligned with BlackRock's Core-Satellite framework and Markowitz diversification principles.
+
+  ────────────────────────────────────────────────────────────────
+  10yr+  HORIZON   Equity 85% / Debt 15%   Diversification = 0.5056
+  ────────────────────────────────────────────────────────────────
+  Core       (High         60%)    ICICI Prudential Nifty Midcap 150 Index Fu    ₹100,000
+                                   ICICI Prudential Silver ETF FOF               ₹100,000
+                                   Nippon India Nifty Alpha Low Volatility 30    ₹100,000
+  Stability  (Medium       20%)    ICICI Prudential Nifty EV & New Age Automo    ₹ 33,300
+                                   ICICI Prudential BSE Liquid Rate ETF - Gro    ₹ 33,300
+                                   Nippon India BSE Sensex Next 30 ETF           ₹ 33,300
+  Growth     (Very_High    20%)    ICICI Prudential Nifty 200 Momentum 30 Ind    ₹ 33,300
+                                   ICICI Prudential NASDAQ 100 Index Fund        ₹ 33,300
+                                   Nippon India Nifty Smallcap 250 Index Fund    ₹ 33,300
+
+  GenAI [rule_based]:
+    **10yr+ Portfolio — High Risk**
+    A 10-year+ horizon fully harnesses compounding. High equity exposure maximises long-term wealth creation; a small debt slice buffers short-term shocks.
+    **Allocation — 85% Equity / 15% Debt:**
+    Core (High, 60%): ICICI Prudential Nifty Midcap 150 I & ICICI Prudential Silver ETF FOF | Stability (Medium, 20%): ICICI Prudential Nifty EV & New Age & ICICI Prudential BSE Liquid Rate ET | Growth (Very_High, 20%): ICICI Prudential Nifty 200 Momentum & ICICI Prudential NASDAQ 100 Index F
+    **Core-Satellite Logic:** The Core (60%) anchors the portfolio in the High tier for primary returns. The Stability satellite (20%) adds a downside buffer via a conservative tier, while the Growth satellite (20%) captures upside from a higher risk tier. This three-bracket structure reduces single-tier concentration risk and is aligned with BlackRock's Core-Satellite framework and Markowitz diversification principles.
+
+=================================================================
+  STEP 8 — Evaluation Metrics
+=================================================================
+[8/8] Running all evaluation metrics ...
+
+=================================================================
+  Running Evaluation Metrics
+=================================================================
+
+[1/5] Cluster Accuracy (Silhouette Score) ...
+[ClusterRec-Embed] Extracting softmax probability vectors for 12500 customers ...
+[ClusterRec-Embed] Embedding shape: (12500, 5) (probability simplex vectors)
+[ClusterRec-Embed] Fitting KMeans(k=5) on embeddings ...
+[ClusterRec-Embed] Silhouette Score  : 0.8570  (target ≥ 0.80)
+[ClusterRec-Embed] Davies-Bouldin    : 0.2032
+[ClusterRec-Embed] Cluster Purity    : 0.9289
+[ClusterRec-Embed] Cluster → Risk    : {0: 'Medium', 1: 'Low', 2: 'High', 3: 'Very_Low', 4: 'Very_High'}
+      Silhouette = 0.8570  (threshold ≥ 0.80)  [PASS ✓]
+
+[2/5] F1 Score with Federated Learning ...
+      Macro F1  = 0.9250  (threshold > 0.80)  [PASS ✓]
+        High        : F1=0.9097  P=0.9819  R=0.8474
+        Low         : F1=0.9435  P=0.9723  R=0.9163
+        Medium      : F1=0.9554  P=0.9529  R=0.9580
+        Very_High   : F1=0.8906  P=0.8028  R=1.0000
+        Very_Low    : F1=0.9258  P=0.8636  R=0.9977
+
+[3/5] Data Privacy (ε, δ-DP) ...
+      ε = 10.0087,  δ = 1e-05  [Weak (ε ≥ 10)]
+
+[4/5] Federated Loss Stability ...
+      Prediction change = 0.29%  (threshold < 10%)  [PASS ✓]
+
+[5/5] GPT Fund Explanation Correctness ...
+      Pass rate = 1.00  (threshold ≥ 0.75)  [PASS ✓]  [via rule_based]
+
+=================================================================
+  Evaluation Summary: 5/5 metrics PASSED
+=================================================================
+  [✓] Cluster Accuracy
+  [✓] F1 Score (FL)
+  [✓] Data Privacy (DP)
+  [✓] Federated Loss Stability
+  [✓] GPT Fund Explanation Correctness
+Saved evaluation dashboard → models/plot_evaluation_dashboard.png
+Saved evaluation details → models/plot_evaluation_details.png
+
+=================================================================
+  Pipeline COMPLETE  ⏱  209.9s
+=================================================================
+  Artefacts saved in:  models/
+  Open notebooks/06_Evaluation_Metrics.ipynb for full interactive report.

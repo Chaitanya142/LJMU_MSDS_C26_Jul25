@@ -1,0 +1,112 @@
+bank_user_dataset.csv
+        │
+        ▼
+  ┌─────────────────────────────────────────┐
+  │  Feature Engineering  (12 features)     │
+  │  income · debt · savings · credit ·     │
+  │  loan · volatility · age_proxy ·        │
+  │  occupation_stability + 4 more          │
+  └─────────────────────────────────────────┘
+        │
+   70% split                         30% split
+        │                                 │
+        ▼                                 ▼
+  ┌─────────────────────┐    ┌──────────────────────────┐
+  │  Central Training   │    │  FL Cohort (3,750 devs)  │
+  │  RiskMLP 30 epochs  │    │  raw bank records only   │
+  │  uses rule-based    │    │  NO pre-assigned labels  │
+  │  risk labels        │    │  (unlabelled at join)    │
+  └──────────┬──────────┘    └────────────┬─────────────┘
+             │                            │
+             └──────── warm-start ────────┘
+                                          │
+                                          ▼
+          ╔═══════════════════════════════════════════════════╗
+          ║         INCREMENTAL FL SIMULATION                 ║
+          ║       (production-realistic: no central labels)    ║
+          ╠═══════════════════════════════════════════════════╣
+          ║                                                   ║
+          ║  When each wave of users onboards:                ║
+          ║  ┌─────────────────────────────────────────────┐  ║
+          ║  │  On-device pseudo-labelling                 │  ║
+          ║  │  global_model.predict(X_local)              │  ║
+          ║  │      → y_pseudo  (risk label for training)  │  ║
+          ║  │  Server NEVER sends or computes labels.     │  ║
+          ║  │  Raw data + pseudo-labels stay on device.   │  ║
+          ║  └─────────────────────────────────────────────┘  ║
+          ║                                                   ║
+          ║  Wave 1: 750 join  pool=  750  PseudoAcc=0.9693   ║
+          ║          Rounds  1-3   EndAcc(oracle)=0.9644       ║
+          ║                 │                                ║
+          ║                 ▼  global model improves         ║
+          ║  Wave 2: 750 join  pool=1500  PseudoAcc=0.9533    ║
+          ║          Rounds  4-6   EndAcc(oracle)=0.9733       ║
+          ║                 │                                ║
+          ║                 ▼  global model improves         ║
+          ║  Wave 3: 750 join  pool=2250  PseudoAcc=0.9707    ║
+          ║          Rounds  7-9   EndAcc(oracle)=0.9615       ║
+          ║                 │                                ║
+          ║                 ▼  global model improves         ║
+          ║  Wave 4: 750 join  pool=3000  PseudoAcc=0.9560    ║
+          ║          Rounds 10-12  EndAcc(oracle)=0.9656       ║
+          ║                 │                                ║
+          ║                 ▼  global model improves         ║
+          ║  Wave 5: 750 join  pool=3750  PseudoAcc=0.9600    ║
+          ║          Rounds 13-15  EndAcc(oracle)=0.9573       ║
+          ║                                                   ║
+          ║  Per-round mechanics (applied every wave):        ║
+          ║  ┌─────────────────────────────────────────────┐  ║
+          ║  │ 1. Sample clients from active_pool           │  ║
+          ║  │    (15% straggler dropout)                  │  ║
+          ║  │ 2. Distribute global_model weights           │  ║
+          ║  │ 3. Each client: local_train(X, y_pseudo)    │  ║
+          ║  │    - epochs ~ Uniform(2, 8)                 │  ║
+          ║  │    - Adam lr=1e-3                           │  ║
+          ║  │    - FedProx mu = 0.01 x 0.9^round          │  ║
+          ║  │ 4. DP noise: sigma=1.0, clip=1.0            │  ║
+          ║  │ 5. FedAvg: weighted delta-weights           │  ║
+          ║  │ 6. global_model <- aggregated update        │  ║
+          ║  └─────────────────────────────────────────────┘  ║
+          ║                                                   ║
+          ║  Accuracy = predictions vs rule-based oracle       ║
+          ║  (oracle labels: eval only, never used to train)   ║
+          ╚═══════════════════════════════════════════════════╝
+                                          │
+                                          ▼
+                    ┌────────────────────────────────────┐
+                    │  global_model                      │
+                    │  fl_global_risk_model.pt            │
+                    │  Acc vs oracle  :  0.9611           │
+                    │  epsilon = 10.0087 (DP budget)      │
+                    │  No raw data ever shared            │
+                    │  No central labels for FL users     │
+                    └───────────────┬────────────────────┘
+                                    │
+              ┌─────────────────────┘
+              │   Inference path for any new user:
+              ▼
+        engineer 12 features from their bank records
+              │
+              ▼
+        global_model.forward(X)   ->   logits (5 values)
+              │
+              ▼
+        softmax   ->   [0.02, 0.05, 0.08, 0.15, 0.70]
+              │         VL    L     M     H    VH
+              ▼
+        argmax  ->  "Very_High"  (confidence 70 %)
+              │
+              ▼
+        recommend_funds("Very_High", mf_df)
+              │
+              ▼
+        XGB + RF ensemble scores 19 features per fund
+        Q = 0.35xCAGR + 0.25xSharpe + 0.25x(-MaxDD)
+            + 0.15xMomentum - 0.10xTER
+              │
+              ▼
+        allocate_portfolio()  ->  weight each fund by Q-score
+              │
+              ▼
+        Top-5 funds from Very_High tier, ranked by ensemble score
+        returned with GPT-generated plain-English explanation

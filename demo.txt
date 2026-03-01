@@ -1,0 +1,343 @@
+
+════════════════════════════════════════════════════════════════════════
+  SMART FUND ADVISOR — Single User End-to-End Demo
+════════════════════════════════════════════════════════════════════════
+  Customer ID  : CUS_0x102d
+  Demo holdout : YES (5% demo holdout — never seen in training or FL)
+  Amount       : ₹100,000
+  Horizons     : 1 yr  |  3 yr  |  5 yr  |  10 yr+
+════════════════════════════════════════════════════════════════════════
+
+  [Loading datasets…]
+  [Datasets loaded]
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 1 — Raw Bank Records (as stored in CSV)
+────────────────────────────────────────────────────────────────────────
+
+  Customer  : CUS_0x102d  (Neil Chatterjeex)
+  Months    : 4 record(s) found
+
+  [September]
+    Month                                  September
+    Age                                    31.00
+    Occupation                             Entrepreneur
+    Annual_Income                          89,064.52
+    Monthly_Inhand_Salary                  7,256.04
+    Num_Bank_Accounts                      5
+    Num_Credit_Card                        3
+    Outstanding_Debt                       648.36
+    Credit_Utilization_Ratio               24.11
+    Amount_invested_monthly                488.42
+    Monthly_Balance                        469.61
+    Num_of_Delayed_Payment                 5.00
+    Credit_Mix                             _
+    Payment_Behaviour                      Low_spent_Large_value_payments
+
+  [October]
+    Month                                  October
+    Age                                    31.00
+    Occupation                             Entrepreneur
+    Annual_Income                          89,064.52
+    Monthly_Inhand_Salary                  7,256.04
+    Num_Bank_Accounts                      5
+    Num_Credit_Card                        3
+    Outstanding_Debt                       648.36
+    Credit_Utilization_Ratio               28.32
+    Amount_invested_monthly                327.64
+    Monthly_Balance                        620.39
+    Num_of_Delayed_Payment                 5.00
+    Credit_Mix                             Good
+    Payment_Behaviour                      High_spent_Small_value_payments
+
+  [November]
+    Month                                  November
+    Age                                    31.00
+    Occupation                             Entrepreneur
+    Annual_Income                          89,064.52
+    Monthly_Inhand_Salary                  7,256.04
+    Num_Bank_Accounts                      5
+    Num_Credit_Card                        144
+    Outstanding_Debt                       648.36
+    Credit_Utilization_Ratio               37.43
+    Amount_invested_monthly                171.16
+    Monthly_Balance                        766.87
+    Num_of_Delayed_Payment                 4.00
+    Credit_Mix                             _
+    Payment_Behaviour                      !@9#%8
+
+  [December]
+    Month                                  December
+    Age                                    31.00
+    Occupation                             Entrepreneur
+    Annual_Income                          89,064.52
+    Monthly_Inhand_Salary                  7,256.04
+    Num_Bank_Accounts                      5
+    Num_Credit_Card                        3
+    Outstanding_Debt                       648.36
+    Credit_Utilization_Ratio               31.83
+    Amount_invested_monthly                114.26
+    Monthly_Balance                        813.77
+    Num_of_Delayed_Payment                 5.00
+    Credit_Mix                             Good
+    Payment_Behaviour                      High_spent_Large_value_payments
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 2 — Feature Engineering (Normalised Risk Features)
+────────────────────────────────────────────────────────────────────────
+
+  ── Income & Savings
+    Annual_Income_norm                     0.4215
+    Monthly_Inhand_Salary_norm             0.5148
+    Investment_Ratio                       0.0052
+    Savings_Rate                           0.9974
+
+  ── Debt & Credit Burden
+    Debt_Burden_Ratio                      0.0112
+    EMI_Income_Ratio                       0.0017
+    Credit_Utilization_Ratio               0.3632
+    Interest_Rate_norm                     0.0000
+
+  ── Behavioural Signals
+    Delay_Score                            0.0059
+    Credit_Mix_Score                       0.7500
+    Spending_Behaviour_Score               0.5556
+    Num_Bank_Accounts_norm                 0.0095
+
+  ── Temporal & Profile
+    Age_Risk_Proxy                         0.7500
+    Occupation_Stability_Score             0.9524
+    Credit_History_Score                   0.8082
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 3 — Risk Scoring & Labelling (Bell-Curve Quantile Binning)
+────────────────────────────────────────────────────────────────────────
+
+  ── Composite Risk Score computation
+    Formula  : weighted sum of 16 risk features (see RISK_FEATURES)
+    Raw score: 8.1541  (population range: 0 – 1)
+
+  ── Bell-curve quantile bins (SEBI-aligned population distribution)
+    Bin          Percentile range       Population share    
+    --------------------------------------------------------
+    Very_Low     0 – 12.5 %             12.5 %  (low-risk tail)
+    Low          12.5 – 37.5 %          25.0 %              
+    Medium       37.5 – 62.5 %          25.0 %  (centre)    
+    High         62.5 – 87.5 %          25.0 %              
+    Very_High    87.5 – 100 %           12.5 %  (high-risk tail)  ◄
+
+  ── Result
+  → Risk Score                             8.1541
+  → Risk Label                             Very_High
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 4 — Multi-Metric Risk Matrix (4 Orthogonal Dimensions)
+────────────────────────────────────────────────────────────────────────
+
+  ── Dimension scores (normalised 0.00 – 1.00, higher = higher risk capacity)
+
+    Financial_Capacity         [██████████████░░░░░░]  0.747
+                                └─ Income, savings, investments — how much can be invested
+
+    Behavioral_Tolerance       [█████████░░░░░░░░░░░]  0.450
+                                └─ Debt behaviour, delays, utilisation — attitude toward risk
+
+    Time_Horizon               [███████████████░░░░░]  0.750
+                                └─ Age, credit history, occupation stability — capacity to wait
+
+    Credit_Health              [█████████████████░░░]  0.892
+                                └─ Credit mix, payment patterns, interest burden — financial discipline
+
+
+  ── Composite (equal-weight average of 4 dimensions)
+    Composite_Risk_Score       [██████████████░░░░░░]  0.710
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 5 — FL Model Inference (RiskMLP Neural Network)
+────────────────────────────────────────────────────────────────────────
+
+  ── Architecture
+    Model     : RiskMLP  (15→256→128→64→32→5, GELU, residual)
+    Training  : FocalLoss(γ=2.0) + Label-Smoothing(0.05)
+    Privacy   : Differentially-private FL  (ε=10.01, δ=1e-5)
+
+  ── Softmax class probabilities
+    High         [█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.1333
+    Low          [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0023
+    Medium       [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0005
+    Very_High    [██████████████████████████████████░░░░░░]  0.8565  ◄ predicted
+    Very_Low     [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0074
+
+  ── FL model prediction
+  → Predicted Risk Class (model)           Very_High
+  → Population-based Label (rule)          Very_High
+
+    Agreement check : ✓ AGREE
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 6 — Fund Recommendations  (Core-Satellite per Horizon)
+────────────────────────────────────────────────────────────────────────
+
+  ── Equity–Debt glide path (SEBI-aligned allocation by horizon)
+    Horizon      Equity %     Debt %      
+    ------------------------------------
+    1 yr         15%          85%         
+    3 yr         50%          50%         
+    5 yr         75%          25%         
+    10 yr        85%          15%         
+
+  ── Horizon: 1yr
+    Equity allocation : 20%
+    Debt  allocation  : 80%
+
+    [Core]  80% weight  →  ₹80,000
+      1. ICICI Prudential Nifty 200 Momentum 30 Index Fund        [Other Scheme - Index Funds]
+      2. ICICI Prudential NASDAQ 100 Index Fund                   [Other Scheme - Index Funds]
+      3. Nippon India Nifty Smallcap 250 Index Fund               [Other Scheme - Index Funds]
+
+    [Stability]  20% weight  →  ₹20,000
+      1. ICICI Prudential Nifty Midcap 150 Index Fund             [Other Scheme - Index Funds]
+      2. ICICI Prudential Silver ETF FOF                          [Other Scheme - FoF Domestic]
+      3. Nippon India Nifty Alpha Low Volatility 30 Index Fund    [Other Scheme - Index Funds]
+
+
+  ── Horizon: 3yr
+    Equity allocation : 60%
+    Debt  allocation  : 40%
+
+    [Core]  80% weight  →  ₹80,000
+      1. ICICI Prudential Nifty 200 Momentum 30 Index Fund        [Other Scheme - Index Funds]
+      2. ICICI Prudential NASDAQ 100 Index Fund                   [Other Scheme - Index Funds]
+      3. Nippon India Nifty Smallcap 250 Index Fund               [Other Scheme - Index Funds]
+
+    [Stability]  20% weight  →  ₹20,000
+      1. ICICI Prudential Nifty Midcap 150 Index Fund             [Other Scheme - Index Funds]
+      2. ICICI Prudential Silver ETF FOF                          [Other Scheme - FoF Domestic]
+      3. Nippon India Nifty Alpha Low Volatility 30 Index Fund    [Other Scheme - Index Funds]
+
+
+  ── Horizon: 5yr
+    Equity allocation : 90%
+    Debt  allocation  : 10%
+
+    [Core]  80% weight  →  ₹80,000
+      1. ICICI Prudential Nifty 200 Momentum 30 Index Fund        [Other Scheme - Index Funds]
+      2. ICICI Prudential NASDAQ 100 Index Fund                   [Other Scheme - Index Funds]
+      3. Nippon India Nifty Smallcap 250 Index Fund               [Other Scheme - Index Funds]
+
+    [Stability]  20% weight  →  ₹20,000
+      1. ICICI Prudential Nifty Midcap 150 Index Fund             [Other Scheme - Index Funds]
+      2. ICICI Prudential Silver ETF FOF                          [Other Scheme - FoF Domestic]
+      3. Nippon India Nifty Alpha Low Volatility 30 Index Fund    [Other Scheme - Index Funds]
+
+
+  ── Horizon: 10yr+
+    Equity allocation : 95%
+    Debt  allocation  : 5%
+
+    [Core]  80% weight  →  ₹80,000
+      1. ICICI Prudential Nifty 200 Momentum 30 Index Fund        [Other Scheme - Index Funds]
+      2. ICICI Prudential NASDAQ 100 Index Fund                   [Other Scheme - Index Funds]
+      3. Nippon India Nifty Smallcap 250 Index Fund               [Other Scheme - Index Funds]
+
+    [Stability]  20% weight  →  ₹20,000
+      1. ICICI Prudential Nifty Midcap 150 Index Fund             [Other Scheme - Index Funds]
+      2. ICICI Prudential Silver ETF FOF                          [Other Scheme - FoF Domestic]
+      3. Nippon India Nifty Alpha Low Volatility 30 Index Fund    [Other Scheme - Index Funds]
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 7 — GenAI Explanation  (LLM  →  Rule-Based Fallback)
+────────────────────────────────────────────────────────────────────────
+
+  User context: Customer Neil Chatterjeex is a Entrepreneur with Very High risk appetite, looking to invest ₹100,000.
+
+  Generating explanations (may take a few seconds)...
+
+
+  ── Horizon: 1yr  [provider: rule_based]
+    **1yr Portfolio — Very_High Risk**  With a 1-year horizon, capital
+    preservation takes precedence over growth. A debt-heavy allocation
+    minimises drawdown risk during short-term volatility.
+    **Allocation — 20% Equity / 80% Debt:** Core (Very_High, 80%):
+    ICICI Prudential Nifty 200 Momentum & ICICI Prudential NASDAQ 100
+    Index F | Stability (High, 20%): ICICI Prudential Nifty Midcap 150
+    I & ICICI Prudential Silver ETF FOF  **Core-Satellite Logic:** The
+    Core (60%) anchors the portfolio in the Very_High tier for primary
+    returns. The Stability satellite (20%) adds a downside buffer via
+    a conservative tier, while the Growth satellite (20%) captures
+    upside from a higher risk tier. This three-bracket structure
+    reduces single-tier concentration risk and is aligned with
+    BlackRock's Core-Satellite framework and Markowitz diversification
+    principles.
+
+
+  ── Horizon: 3yr  [provider: rule_based]
+    **3yr Portfolio — Very_High Risk**  A 3-year horizon allows
+    moderate equity exposure for inflation-beating returns while a
+    strong debt allocation cushions against market corrections.
+    **Allocation — 60% Equity / 40% Debt:** Core (Very_High, 80%):
+    ICICI Prudential Nifty 200 Momentum & ICICI Prudential NASDAQ 100
+    Index F | Stability (High, 20%): ICICI Prudential Nifty Midcap 150
+    I & ICICI Prudential Silver ETF FOF  **Core-Satellite Logic:** The
+    Core (60%) anchors the portfolio in the Very_High tier for primary
+    returns. The Stability satellite (20%) adds a downside buffer via
+    a conservative tier, while the Growth satellite (20%) captures
+    upside from a higher risk tier. This three-bracket structure
+    reduces single-tier concentration risk and is aligned with
+    BlackRock's Core-Satellite framework and Markowitz diversification
+    principles.
+
+
+  ── Horizon: 5yr  [provider: rule_based]
+    **5yr Portfolio — Very_High Risk**  Over 5 years, equity
+    volatility tends to average out. A balanced allocation targets
+    meaningful real returns while debt provides a stability anchor.
+    **Allocation — 90% Equity / 10% Debt:** Core (Very_High, 80%):
+    ICICI Prudential Nifty 200 Momentum & ICICI Prudential NASDAQ 100
+    Index F | Stability (High, 20%): ICICI Prudential Nifty Midcap 150
+    I & ICICI Prudential Silver ETF FOF  **Core-Satellite Logic:** The
+    Core (60%) anchors the portfolio in the Very_High tier for primary
+    returns. The Stability satellite (20%) adds a downside buffer via
+    a conservative tier, while the Growth satellite (20%) captures
+    upside from a higher risk tier. This three-bracket structure
+    reduces single-tier concentration risk and is aligned with
+    BlackRock's Core-Satellite framework and Markowitz diversification
+    principles.
+
+
+  ── Horizon: 10yr+  [provider: rule_based]
+    **10yr+ Portfolio — Very_High Risk**  A 10-year+ horizon fully
+    harnesses compounding. High equity exposure maximises long-term
+    wealth creation; a small debt slice buffers short-term shocks.
+    **Allocation — 95% Equity / 5% Debt:** Core (Very_High, 80%):
+    ICICI Prudential Nifty 200 Momentum & ICICI Prudential NASDAQ 100
+    Index F | Stability (High, 20%): ICICI Prudential Nifty Midcap 150
+    I & ICICI Prudential Silver ETF FOF  **Core-Satellite Logic:** The
+    Core (60%) anchors the portfolio in the Very_High tier for primary
+    returns. The Stability satellite (20%) adds a downside buffer via
+    a conservative tier, while the Growth satellite (20%) captures
+    upside from a higher risk tier. This three-bracket structure
+    reduces single-tier concentration risk and is aligned with
+    BlackRock's Core-Satellite framework and Markowitz diversification
+    principles.
+
+
+────────────────────────────────────────────────────────────────────────
+  SUMMARY
+────────────────────────────────────────────────────────────────────────
+  → Customer                               CUS_0x102d  (Neil Chatterjeex)
+  → Occupation                             Entrepreneur
+  → Risk Score                             8.1541
+  → Risk Label (rules)                     Very_High
+  → Risk Label (FL model)                  Very_High
+  → Investment Amount                      ₹100,000
+  → Horizons covered                       1 yr  |  3 yr  |  5 yr  |  10 yr+
+  → Explanation provider                   Groq / OpenRouter / HF / rule-based
+  → Elapsed                                5.7 s
+
+════════════════════════════════════════════════════════════════════════
+  Demo complete.
+════════════════════════════════════════════════════════════════════════
+
