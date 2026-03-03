@@ -279,6 +279,13 @@ def run_fl_simulation(
                 mu=mu_round,
                 class_weights=class_weights_tensor,
             )
+            client_updates.append((updated, n))
+            round_losses.append(loss)
+
+        # FedAvg aggregation: weighted average of client parameters
+        global_params = _fedavg(client_updates)
+        avg_loss       = float(np.mean(round_losses))
+        fl_history["distributed_loss"][str(rnd)] = avg_loss
 
         # Round-level accuracy evaluated on sampled devices
         global_model_tmp = RiskMLP()

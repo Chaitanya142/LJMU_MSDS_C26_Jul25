@@ -27,16 +27,44 @@ from config import (
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
+# Columns that cannot logically be negative (counts, delays, limits, age).
+# Any negative value after numeric coercion is a data-entry error → clamped to 0.
+# Columns with a simple lower=0 floor (no meaningful upper bound).
+NON_NEGATIVE_COLS = [
+    "Delay_from_due_date"
+]
+
+# Per-column valid ranges: values outside [lo, hi] are data-entry errors
+# and are replaced with NaN so per-customer ffill/bfill can recover them.
+# Rationale for each bound:
+#   Age                 10–100  : youngest possible account holder; cap obvious outliers
+#   Num_Bank_Accounts    0–20   : >20 accounts is implausible / entry error
+#   Num_of_Loan          0–50   : extreme outliers in source data
+#   Interest_Rate        0–50   : >50% is usurious / likely mis-entry
+#   Num_Credit_Card      0–50   : >50 cards is implausible
+#   Num_of_Delayed_Payment 0–100: >100 delayed payments per customer is noise
+COLUMN_BOUNDS: dict[str, tuple[float, float]] = {
+    "Age":                    (10,  100),
+    "Num_Bank_Accounts":      (0,    20),
+    "Num_of_Loan":            (0,    50),
+    "Interest_Rate":          (0,    50),
+    "Num_Credit_Card":        (0,    50),
+    "Num_of_Delayed_Payment": (0,   100),
+}
+
+
 def _clean_numeric(series: pd.Series) -> pd.Series:
-    """Strip non-numeric garbage, coerce to float, fill NaN with median."""
+    """
+    Strip non-numeric garbage and coerce to float.
+    NaN values are intentionally left as NaN here so that the caller can apply
+    per-customer forward/back-fill before falling back to the global median.
+    """
     cleaned = (
         series.astype(str)
         .str.replace(r"[^\d.\-]", "", regex=True)
         .replace("", np.nan)
     )
-    cleaned = pd.to_numeric(cleaned, errors="coerce")
-    median_val = cleaned.median()
-    return cleaned.fillna(median_val)
+    return pd.to_numeric(cleaned, errors="coerce")
 
 
 def _encode_credit_mix(series: pd.Series) -> pd.Series:
@@ -161,6 +189,39 @@ def load_and_clean(csv_path=None) -> pd.DataFrame:
         if col in df.columns:
             df[col] = _clean_numeric(df[col])
 
+    # ── Step 1a: Clamp floor-only columns (no meaningful upper bound) ──────────
+    for col in NON_NEGATIVE_COLS:
+        if col in df.columns:
+            df[col] = df[col].clip(lower=0)
+
+    # ── Step 1b: Range-bound columns → out-of-range → NaN ────────────────────
+    # Replacing with NaN (rather than clamping) lets Step 2's per-customer
+    # ffill/bfill recover the correct value from the same customer's other rows.
+    for col, (lo, hi) in COLUMN_BOUNDS.items():
+        if col in df.columns:
+            df[col] = df[col].where(
+                df[col].between(lo, hi, inclusive='both'),
+                other=np.nan
+            )
+
+    # ── Step 2: Per-customer forward/back fill ─────────────────────────────────
+    # Each customer has up to 4 monthly rows.  A single noisy/missing value in
+    # one month can be estimated from the customer's own other months — this is
+    # more realistic than replacing with the cross-customer global median.
+    # Strategy: sort by Customer_ID (already grouped), ffill then bfill within
+    # each group, so each null borrows from the nearest valid row for that user.
+    per_customer_fill_cols = [c for c in num_cols if c in df.columns]
+    df[per_customer_fill_cols] = (
+        df.groupby("Customer_ID")[per_customer_fill_cols]
+        .transform(lambda x: x.ffill().bfill())
+    )
+
+    # ── Step 3: Global median fallback for any remaining NaN ──────────────────
+    # Covers customers whose ALL rows are null for that column (rare).
+    for col in per_customer_fill_cols:
+        median_val = df[col].median()
+        df[col] = df[col].fillna(median_val)
+
     # ── Credit_History_Age  →  total months (numeric) ──
     if "Credit_History_Age" in df.columns:
         df["Credit_History_Months"] = _parse_credit_history_months(
@@ -192,7 +253,7 @@ def aggregate_per_customer(df: pd.DataFrame) -> pd.DataFrame:
     This mirrors what a mobile device would compute from its ≤4 local records.
     """
     agg_dict = {
-        "Age":                       "mean",
+        "Age":                       "first",   # age doesn't change in 4-8 months; mean → fractions
         "Annual_Income":             "mean",
         "Monthly_Inhand_Salary":     "mean",
         "Num_Bank_Accounts":         "mean",
@@ -216,6 +277,9 @@ def aggregate_per_customer(df: pd.DataFrame) -> pd.DataFrame:
     # Only keep columns that exist
     agg_dict = {k: v for k, v in agg_dict.items() if k in df.columns}
     agg_df = df.groupby("Customer_ID").agg(agg_dict).reset_index()
+    # Age must stay integer — round away any residual float from coercion.
+    if "Age" in agg_df.columns:
+        agg_df["Age"] = agg_df["Age"].round().astype("Int64")
     return agg_df
 
 
