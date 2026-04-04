@@ -1,0 +1,148 @@
+
+=================================================================
+  STEP 1 — Data Loading, Feature Engineering, Risk Labelling
+=================================================================
+[1/8] Loading and preprocessing bank dataset...
+
+=================================================================
+  STEP 1a — PCA Risk Model (PC1 as Composite Risk Score)
+=================================================================
+[PCA-Risk] Fitted 5-component PCA on 15 features
+[PCA-Risk] Explained variance: PC1=32.5% | PC2=17.5% | PC3=12.2% | PC4=10.8% | PC5=8.3%
+[PCA-Risk] PC1 sign: flipped (pos-loading sum=-1.6054)
+[PCA-Risk] PC1 loadings (↑=risk-positive, sorted):
+    +█████████           +0.5247  Credit_Mix_Score
+    +██████              +0.3559  Credit_History_Score
+    +████                +0.2512  Monthly_Inhand_Salary_norm
+    +███                 +0.2104  Annual_Income_norm
+    +██                  +0.1291  Spending_Behaviour_Score
+    +█                   +0.0646  Credit_Utilization_Ratio
+    +█                   +0.0612  Savings_Rate
+    +█                   +0.0083  Occupation_Stability_Score
+    -█                   -0.0345  Investment_Ratio
+    -█                   -0.0635  EMI_Income_Ratio
+    -██                  -0.1636  Debt_Burden_Ratio
+    -███                 -0.1784  Age_Risk_Proxy
+    -█████               -0.3297  Delay_Score
+    -██████              -0.3449  Num_Bank_Accounts_norm
+    -███████             -0.4177  Interest_Rate_norm
+      Total customers : 12500
+      Risk distribution:
+risk_label
+High         3125
+Low          3125
+Medium       3124
+Very_Low     1563
+Very_High    1563
+
+  Sample User Risk Scores (first 10 customers):
+  Customer_ID          Account_Type      Risk_Score Risk_Label  
+  --------------------------------------------------------------
+  CUS_0x1000           Customer             -0.8004 Very_Low    
+  CUS_0x1009           Customer              0.0582 Medium      
+  CUS_0x100b           Customer              0.6774 Very_High   
+  CUS_0x1011           Customer              0.0778 Medium      
+  CUS_0x1013           Customer              0.6246 High        
+  CUS_0x1015           Customer             -0.0273 Medium      
+  CUS_0x1018           Customer             -0.5205 Low         
+  CUS_0x1026           Customer              1.0218 Very_High   
+  CUS_0x102d           Customer              0.6455 Very_High   
+  CUS_0x102e           Customer              0.0143 Medium      
+
+=================================================================
+  STEP 2 — Customer Split (65% Central / 30% FL / 5% Demo Holdout)
+=================================================================
+      Central split : 8125 customers  (65 % of total)
+      FL split      : 3750 customers  (30 % of total)
+      Demo holdout  : 625 customers  ( 5 % of total, unseen)
+      Risk distribution Central:
+risk_label
+High         2016
+Medium       2001
+Low          1999
+Very_Low     1062
+Very_High    1047
+      Demo customer list saved → /Users/chaitanya/Downloads/Submission/Code/20Feb26/models/demo_customers.csv
+
+=================================================================
+  STEP 3 — Central Model Training
+=================================================================
+[3/8] Training MLP — 6500 train | 1625 val
+[Central] Training on device: cpu
+[Central] Features: 15 | Loss: CrossEntropyLoss (label_smoothing=0.05) | Early stop patience=8
+  Epoch   1/40  train_loss=1.4256  val_loss=1.1653  val_acc=0.5385  ★ best
+  Epoch   2/40  train_loss=1.1264  val_loss=0.8801  val_acc=0.7742  ★ best
+  Epoch   3/40  train_loss=0.8656  val_loss=0.6276  val_acc=0.8529  ★ best
+  Epoch   4/40  train_loss=0.6771  val_loss=0.4771  val_acc=0.9126  ★ best
+  Epoch   5/40  train_loss=0.6045  val_loss=0.4341  val_acc=0.9342  ★ best
+  Epoch  10/40  train_loss=0.5247  val_loss=0.3967  val_acc=0.9163
+  Epoch  11/40  train_loss=0.5263  val_loss=0.3889  val_acc=0.9397  ★ best
+  Epoch  12/40  train_loss=0.5039  val_loss=0.3835  val_acc=0.9440  ★ best
+  Epoch  14/40  train_loss=0.4910  val_loss=0.3644  val_acc=0.9458  ★ best
+  Epoch  15/40  train_loss=0.4959  val_loss=0.3829  val_acc=0.9335
+  Epoch  16/40  train_loss=0.4781  val_loss=0.3650  val_acc=0.9538  ★ best
+  Epoch  18/40  train_loss=0.4757  val_loss=0.3632  val_acc=0.9545  ★ best
+  Epoch  20/40  train_loss=0.4558  val_loss=0.3615  val_acc=0.9385
+  Epoch  25/40  train_loss=0.4509  val_loss=0.3547  val_acc=0.9483
+  ── Early stopping at epoch 26 (no improvement for 8 epochs)
+[Central] Best val accuracy: 0.9545 (stopped at epoch 26/40)
+[Central] Model saved → /Users/chaitanya/Downloads/Submission/Code/20Feb26/models/central_risk_model.pt
+
+============================================================
+Classification Report
+============================================================
+              precision    recall  f1-score   support
+
+        High       0.98      0.93      0.95       403
+         Low       0.98      0.93      0.95       400
+      Medium       0.93      0.98      0.95       400
+   Very_High       0.93      0.99      0.96       210
+    Very_Low       0.93      0.98      0.95       212
+
+    accuracy                           0.95      1625
+   macro avg       0.95      0.96      0.95      1625
+weighted avg       0.96      0.95      0.95      1625
+
+Confusion Matrix:
+[[375   0  13  15   0]
+ [  0 370  15   0  15]
+ [  7   2 391   0   0]
+ [  2   0   0 208   0]
+ [  0   5   0   0 207]]
+Saved training history plot → models/plot_central_training.png
+Saved confusion matrix → models/plot_central_confusion.png
+
+=================================================================
+  TEST CASES — Risk Appetite for Edge-Case Users
+=================================================================
+
+  Profile                      Predicted Risk     Confidence
+  ------------------------------------------------------------
+  High Income Investor         Very_High              95.6%
+  Over-indebted Low Earner     Very_Low               93.2%
+  Balanced Salaried            Medium                 77.0%
+  Young Aggressive             High                   79.8%
+  Retiree Conservative         High                   86.9%
+
+=================================================================
+  STEP 3b — Alternative Classifier Comparison (vs RiskMLP)
+=================================================================
+
+========================================================================
+  Alternative Classifier Comparison (vs RiskMLP + CrossEntropyLoss)
+  Train N=6,500  Val N=1,625  Features=15
+========================================================================
+
+  [SVM] Training …
+  SVM                  val_F1=0.9600  val_acc=0.9606  CV-F1=0.9588±0.0054  train=1.4s
+
+  [XGBoost] Training …
+  XGBoost              val_F1=0.9354  val_acc=0.9335  CV-F1=0.9192±0.0108  train=2.6s
+
+  [DecisionTree] Training …
+  DecisionTree         val_F1=0.8027  val_acc=0.8012  CV-F1=0.7945±0.0027  train=0.1s
+
+  [DensityClassifier] Training …
+  DensityClassifier    val_F1=0.8928  val_acc=0.8886  CV-F1=0.8928±0.0000  train=0.0s
+
+  [RandomForest] Training …

@@ -1,0 +1,237 @@
+{
+  "distributed_loss": {
+    "1": 1.0562480445338203,
+    "2": 1.0519187237565244,
+    "3": 1.248245827816316,
+    "4": 1.1438259432613982,
+    "5": 0.8923197108522478,
+    "6": 0.7699862898108532,
+    "7": 0.891877576611719,
+    "8": 0.7599631144518924,
+    "9": 1.1354882205823353,
+    "10": 0.7811905702436022,
+    "11": 1.2492568946613118,
+    "12": 0.7744246001893975,
+    "13": 0.8103878714682113,
+    "14": 1.141854952046531,
+    "15": 2.5057017609582832
+  },
+  "round_accuracy": {
+    "1": 0.5111111111111111,
+    "2": 0.6177777777777778,
+    "3": 0.5111111111111111,
+    "4": 0.5533333333333333,
+    "5": 0.6377777777777778,
+    "6": 0.6577777777777778,
+    "7": 0.5214814814814814,
+    "8": 0.3940740740740741,
+    "9": 0.6133333333333333,
+    "10": 0.4677777777777778,
+    "11": 0.4022222222222222,
+    "12": 0.4411111111111111,
+    "13": 0.6986666666666667,
+    "14": 0.25155555555555553,
+    "15": 0.136
+  },
+  "round_entropy": {
+    "1": 1.5229,
+    "2": 1.4796,
+    "3": 1.4571,
+    "4": 1.4956,
+    "5": 1.3767,
+    "6": 1.3943,
+    "7": 1.5302,
+    "8": 1.4084,
+    "9": 1.2656,
+    "10": 1.2196,
+    "11": 1.3206,
+    "12": 1.2836,
+    "13": 1.14,
+    "14": 1.3349,
+    "15": 0.7898
+  },
+  "round_drift": {
+    "1": {
+      "n_clients": 188,
+      "n_high_drift": 51,
+      "drift_fraction": 0.2713,
+      "mean_cosine": 0.0661,
+      "min_cosine": -0.2273,
+      "alpha_wave": 1.5
+    },
+    "2": {
+      "n_clients": 198,
+      "n_high_drift": 41,
+      "drift_fraction": 0.2071,
+      "mean_cosine": 0.0697,
+      "min_cosine": -0.2006,
+      "alpha_wave": 1.5
+    },
+    "3": {
+      "n_clients": 197,
+      "n_high_drift": 54,
+      "drift_fraction": 0.2741,
+      "mean_cosine": 0.0726,
+      "min_cosine": -0.2392,
+      "alpha_wave": 1.5
+    },
+    "4": {
+      "n_clients": 392,
+      "n_high_drift": 141,
+      "drift_fraction": 0.3597,
+      "mean_cosine": 0.0431,
+      "min_cosine": -0.2394,
+      "alpha_wave": 1.2
+    },
+    "5": {
+      "n_clients": 367,
+      "n_high_drift": 113,
+      "drift_fraction": 0.3079,
+      "mean_cosine": 0.0534,
+      "min_cosine": -0.2506,
+      "alpha_wave": 1.2
+    },
+    "6": {
+      "n_clients": 381,
+      "n_high_drift": 136,
+      "drift_fraction": 0.357,
+      "mean_cosine": 0.0484,
+      "min_cosine": -0.2974,
+      "alpha_wave": 1.2
+    },
+    "7": {
+      "n_clients": 575,
+      "n_high_drift": 200,
+      "drift_fraction": 0.3478,
+      "mean_cosine": 0.0405,
+      "min_cosine": -0.2954,
+      "alpha_wave": 0.9
+    },
+    "8": {
+      "n_clients": 567,
+      "n_high_drift": 191,
+      "drift_fraction": 0.3369,
+      "mean_cosine": 0.04,
+      "min_cosine": -0.265,
+      "alpha_wave": 0.9
+    },
+    "9": {
+      "n_clients": 579,
+      "n_high_drift": 204,
+      "drift_fraction": 0.3523,
+      "mean_cosine": 0.0433,
+      "min_cosine": -0.3713,
+      "alpha_wave": 0.9
+    },
+    "10": {
+      "n_clients": 786,
+      "n_high_drift": 286,
+      "drift_fraction": 0.3639,
+      "mean_cosine": 0.0346,
+      "min_cosine": -0.3132,
+      "alpha_wave": 0.6
+    },
+    "11": {
+      "n_clients": 765,
+      "n_high_drift": 297,
+      "drift_fraction": 0.3882,
+      "mean_cosine": 0.0328,
+      "min_cosine": -0.3075,
+      "alpha_wave": 0.6
+    },
+    "12": {
+      "n_clients": 766,
+      "n_high_drift": 279,
+      "drift_fraction": 0.3642,
+      "mean_cosine": 0.0377,
+      "min_cosine": -0.3481,
+      "alpha_wave": 0.6
+    },
+    "13": {
+      "n_clients": 956,
+      "n_high_drift": 378,
+      "drift_fraction": 0.3954,
+      "mean_cosine": 0.0311,
+      "min_cosine": -0.347,
+      "alpha_wave": 0.3
+    },
+    "14": {
+      "n_clients": 952,
+      "n_high_drift": 360,
+      "drift_fraction": 0.3782,
+      "mean_cosine": 0.0318,
+      "min_cosine": -0.3346,
+      "alpha_wave": 0.3
+    },
+    "15": {
+      "n_clients": 975,
+      "n_high_drift": 357,
+      "drift_fraction": 0.3662,
+      "mean_cosine": 0.0325,
+      "min_cosine": -0.3674,
+      "alpha_wave": 0.3
+    }
+  },
+  "waves": {
+    "1": {
+      "new_users_joined": 750,
+      "total_pool_size": 750,
+      "pseudo_label_acc": 0.6173,
+      "spearman_rho": 0.3521,
+      "alpha_wave": 1.5,
+      "start_round": 1,
+      "end_round": 3,
+      "end_accuracy": 0.5111,
+      "mean_round_entropy": 1.4865,
+      "mean_drift_clients": 48.67
+    },
+    "2": {
+      "new_users_joined": 750,
+      "total_pool_size": 1500,
+      "pseudo_label_acc": 0.5427,
+      "spearman_rho": 0.3903,
+      "alpha_wave": 1.2,
+      "start_round": 4,
+      "end_round": 6,
+      "end_accuracy": 0.6578,
+      "mean_round_entropy": 1.4222,
+      "mean_drift_clients": 130.0
+    },
+    "3": {
+      "new_users_joined": 750,
+      "total_pool_size": 2250,
+      "pseudo_label_acc": 0.5467,
+      "spearman_rho": -0.0014,
+      "alpha_wave": 0.9,
+      "start_round": 7,
+      "end_round": 9,
+      "end_accuracy": 0.6133,
+      "mean_round_entropy": 1.4014,
+      "mean_drift_clients": 198.33
+    },
+    "4": {
+      "new_users_joined": 750,
+      "total_pool_size": 3000,
+      "pseudo_label_acc": 0.492,
+      "spearman_rho": -0.1438,
+      "alpha_wave": 0.6,
+      "start_round": 10,
+      "end_round": 12,
+      "end_accuracy": 0.4411,
+      "mean_round_entropy": 1.2746,
+      "mean_drift_clients": 287.33
+    },
+    "5": {
+      "new_users_joined": 750,
+      "total_pool_size": 3750,
+      "pseudo_label_acc": 0.428,
+      "spearman_rho": -0.0802,
+      "alpha_wave": 0.3,
+      "start_round": 13,
+      "end_round": 15,
+      "end_accuracy": 0.136,
+      "mean_round_entropy": 1.0882,
+      "mean_drift_clients": 365.0
+    }
+  }
+}

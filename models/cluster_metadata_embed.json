@@ -1,0 +1,35 @@
+{
+  "embedding_type": "softmax_probability",
+  "embedding_dim": 5,
+  "silhouette_score": 0.956,
+  "davies_bouldin_index": 0.0668,
+  "cluster_purity": 0.9488,
+  "cluster_to_risk": {
+    "0": "Very_High",
+    "1": "Medium",
+    "2": "High",
+    "3": "Low",
+    "4": "Very_Low"
+  },
+  "cluster_sizes": {
+    "0": 1683,
+    "1": 3280,
+    "2": 2977,
+    "3": 2930,
+    "4": 1630
+  },
+  "per_cluster_purity": {
+    "0": 0.9138,
+    "1": 0.9293,
+    "2": 0.9704,
+    "3": 0.987,
+    "4": 0.9436
+  },
+  "per_cluster_silhouette": {
+    "0": 0.9595,
+    "1": 0.962,
+    "2": 0.9521,
+    "3": 0.9514,
+    "4": 0.9552
+  }
+}

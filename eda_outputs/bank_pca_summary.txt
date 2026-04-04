@@ -1,0 +1,36 @@
+=== PCA Risk Model Summary ===
+Input features: 15 (RISK_FEATURES from config.py)
+PCA components fitted: 5
+
+--- Explained Variance ---
+  PC1: 32.48%  (cumulative: 32.48%)
+  PC2: 17.52%  (cumulative: 49.99%)
+  PC3: 12.21%  (cumulative: 62.20%)
+  PC4: 10.79%  (cumulative: 72.99%)
+  PC5: 8.31%  (cumulative: 81.31%)
+
+PC1 sign correction: flipped
+
+--- PC1 Loadings (sorted descending, sign-corrected) ---
+  +0.5247  Credit_Mix_Score                       (up risk)
+  +0.3559  Credit_History_Score                   (up risk)
+  +0.2512  Monthly_Inhand_Salary_norm             (up risk)
+  +0.2104  Annual_Income_norm                     (up risk)
+  +0.1291  Spending_Behaviour_Score               (up risk)
+  +0.0646  Credit_Utilization_Ratio               (up risk)
+  +0.0612  Savings_Rate                           (up risk)
+  +0.0083  Occupation_Stability_Score             (up risk)
+  -0.0345  Investment_Ratio                       (down risk)
+  -0.0635  EMI_Income_Ratio                       (down risk)
+  -0.1636  Debt_Burden_Ratio                      (down risk)
+  -0.1784  Age_Risk_Proxy                         (down risk)
+  -0.3297  Delay_Score                            (down risk)
+  -0.3449  Num_Bank_Accounts_norm                 (down risk)
+  -0.4177  Interest_Rate_norm                     (down risk)
+
+--- Risk Label Distribution ---
+  Very_Low    :   1563  (12.5%)
+  Low         :   3125  (25.0%)
+  Medium      :   3124  (25.0%)
+  High        :   3125  (25.0%)
+  Very_High   :   1563  (12.5%)

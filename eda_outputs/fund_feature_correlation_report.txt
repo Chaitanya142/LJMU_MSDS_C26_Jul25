@@ -1,0 +1,46 @@
+=== Fund Ensemble Feature Correlation Report ===
+Feature matrix shape: (16376, 28)
+Total features: 28
+
+--- Feature List ---
+   1. log_aum
+   2. nav_log
+   3. min_inv_log
+   4. fund_age_years
+   5. nav_recency_days
+   6. is_open_ended
+   7. is_active
+   8. is_growth
+   9. risk_tier_ord
+  10. amc_is_top
+  11. amc_size_norm
+  12. expense_ratio_norm
+  13. expense_ratio_real_norm
+  14. ter_missing_flag
+  15. has_nav_history
+  16. has_fundperf_returns
+  17. data_quality_flag
+  18. cagr_1yr_hist
+  19. cagr_3yr_hist
+  20. cagr_5yr_hist
+  21. vol_1yr_hist
+  22. sharpe_1yr_hist
+  23. max_drawdown_hist
+  24. recovery_time_hist
+  25. momentum_6m_hist
+  26. consistency_1y_hist
+  27. tracking_error_1y_hist
+  28. benchmark_missing_flag
+
+--- High-Correlation Pairs (|r| >= 0.8) ---
+Count: 2
+  +1.000  has_nav_history  <->  data_quality_flag
+  +0.861  vol_1yr_hist  <->  tracking_error_1y_hist
+
+--- Recommended Removals (keep most informative, remove redundant) ---
+  REMOVE: has_nav_history  (r=+1.000 with data_quality_flag)
+  REMOVE: tracking_error_1y_hist  (r=+0.861 with vol_1yr_hist)
+
+--- Correlation Matrix Stats ---
+  Mean |r| (off-diagonal): nan
+  Max  |r| (off-diagonal): nan

@@ -1,0 +1,129 @@
+=================================================================
+  SMART FUND ADVISOR — Full System Test  (v3)
+=================================================================
+
+[1/10] Preprocessing + Risk Labelling (15 features)
+      Customers: 12,500 | Features: 15
+      New features verified: EMI_Income_Ratio, Savings_Rate, Credit_History_Score
+      Risk distribution: {'Low': 3125, 'High': 3125, 'Medium': 3124, 'Very_Low': 1563, 'Very_High': 1563}
+
+[2/10] Central Model (RiskMLP + FocalLoss + GELU + Residual)
+      Architecture: 15→256→128→64→32→5
+      Parameters: 50,501 | Activation: GELU | Residual: ✓
+      FocalLoss(γ=2.0, smoothing=0.05): loss=1.1078
+      Predicted classes: ['High', 'Low', 'Medium', 'Very_High', 'Very_Low']
+      Max confidence: 0.995
+
+[3/10] Federated Learning Global Model
+      Central ↔ FL agreement: 1.000 (100.0%)
+      FL model confidence (mean): 0.880
+
+[4/10] Differential Privacy Accounting
+      ε = 0.4862, δ = 1e-05
+      Privacy quality: Strong
+
+[5/10] Drift Detection (PSI + KS Test)
+      No-drift: flag=False, score=0.0094
+      Big-drift: flag=True, score=0.4935, top_feat=Monthly_Inhand_Salary_norm
+      4-tuple returns: ✓ (per-feature details dict)
+      Population drift report: 15 features, 0 HIGH severity
+
+[6/10] KMeans Cluster Recommender (Silhouette ≥ 0.80)
+      Embedding type: softmax_probability
+      Silhouette : 0.9655  [PASS ✓]
+      Davies-Bouldin: 0.0559
+      Purity     : 0.9624
+      Cluster→Risk: {'0': 'Very_High', '1': 'Medium', '2': 'Low', '3': 'High', '4': 'Very_Low'}
+
+[7/10] Ensemble Fund Scorer (XGB + RF + LightGBM)
+      Funds scored: 14,330
+      Score range: [0.0000, 0.9847]
+      LightGBM model: ✓
+      Ensemble weights: {'xgb': 0.4, 'rf': 0.35, 'lgbm': 0.25}
+
+[8/10] Fund Recommendations (all 5 risk tiers)
+      Fund database: 14,330 schemes
+      Very_Low     → 5 funds | UTI - Liquid Fund
+      Low          → 5 funds | DSP Liquidity Fund
+      Medium       → 5 funds | Aditya Birla Sun Life Savings Fund
+      High         → 5 funds | HDFC Hybrid Debt Fund
+      Very_High    → 5 funds | JM Value Fund
+
+[9/10] Portfolio Diversification (HHI + AMC Cap)
+      Weight sum: 0.9996  (expected ~1.0)
+      Max AMC concentration: 37.50%  (cap=40%)
+      Diversification score: 0.7258
+      Total allocation: ₹99,996
+      Funds in portfolio: 10
+
+[10/10] GPT Explanation + Correctness Validation
+      Provider: huggingface
+      HDFC Hybrid Debt Fund                       score=0.75  PASS ✓
+      Kotak Debt Hybrid Fund                      score=0.75  PASS ✓
+      ICICI Prudential All Seasons Bond Fund      score=0.75  PASS ✓
+      Pass rate: 100%
+
+[11/13] Multi-Metric Risk Matrix (4 sub-dimensions)
+      Dimensions: ['Financial_Capacity', 'Behavioral_Tolerance', 'Time_Horizon', 'Credit_Health']
+        Financial_Capacity        mean=0.559  std=0.182
+        Behavioral_Tolerance      mean=0.532  std=0.200
+        Time_Horizon              mean=0.416  std=0.278
+        Credit_Health             mean=0.571  std=0.201
+      Composite: mean=0.520, std=0.150
+      All sub-scores normalised to [0,1]: ✓
+
+[12/13] Horizon-Based Fund Recommendations
+      1yr:  equity=15%  debt=85%  funds=6
+      5yr:  equity=75%  debt=25%  funds=6
+      10yr+: equity=95%  debt=5%  funds=6
+      SEBI glide-path: 1yr conservative → 10yr aggressive ✓
+
+[13/13] Core-Satellite Diversified Portfolio
+      Medium: 3 brackets — ['Core', 'Stability', 'Growth']
+        Core=Medium, Stability=Low, Growth=High
+        Portfolio: 9 funds, weight_sum=1.0002
+        Diversification: 0.6519
+        Allocation: ₹500,100
+      Edge cases: Very_Low=2 brackets, Very_High=2 brackets ✓
+
+[14/16] Model Calibration (Brier Score)
+      Brier Score = 0.0694  (threshold < 0.10)  ✓
+        High        : BS=0.0184
+        Low         : BS=0.0171
+        Medium      : BS=0.0142
+        Very_High   : BS=0.0098
+        Very_Low    : BS=0.0100
+
+[15/16] Fairness — Demographic Parity (Age Groups)
+      APR = 0.9891  (threshold ≥ 0.90)  ✓
+        Young (≤30)         : n=1,594  accuracy=0.9661
+        Middle (31-50)      : n=1,886  accuracy=0.9639
+        Senior (>50)        : n=270  accuracy=0.9556
+
+[16/16] FL-Central Accuracy Gap (Privacy-Utility Trade-off)
+      Gap = 0.0267 pp  (threshold < 2.0 pp)  ✓
+        Central=96.40%  FL=96.43%
+
+=================================================================
+  TEST RESULTS
+=================================================================
+  [[92m✓ PASS[0m] preprocessing
+  [[92m✓ PASS[0m] central_model
+  [[92m✓ PASS[0m] fl_model
+  [[92m✓ PASS[0m] privacy
+  [[92m✓ PASS[0m] drift_detection
+  [[92m✓ PASS[0m] cluster_recommender
+  [[92m✓ PASS[0m] ensemble_scorer
+  [[92m✓ PASS[0m] recommendations
+  [[92m✓ PASS[0m] diversification
+  [[92m✓ PASS[0m] gpt
+  [[92m✓ PASS[0m] risk_matrix
+  [[92m✓ PASS[0m] horizon_recs
+  [[92m✓ PASS[0m] core_satellite
+  [[92m✓ PASS[0m] calibration
+  [[92m✓ PASS[0m] fairness
+  [[92m✓ PASS[0m] fl_central_gap
+
+  16/16 tests passed  ⏱ 24.1s
+=================================================================
+

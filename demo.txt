@@ -1,0 +1,261 @@
+/Users/chaitanya/Downloads/Submission/Code/20Feb26/demo_single_user.py:387: UserWarning: [TER] Matched 9290/16376 funds (56.7%) to real SEBI TER [code=0, name+cat=9237, name=53]; 7086 imputed [category=6668, global=418]
+  mf_df   = load_mutual_funds()          # tags risk_tier from Scheme_Category
+
+════════════════════════════════════════════════════════════════════════
+  SMART FUND ADVISOR — Single User End-to-End Demo
+════════════════════════════════════════════════════════════════════════
+  Customer ID  : CUS_0x11ae
+  Demo holdout : YES (5% demo holdout — never seen in training or FL)
+  Amount       : ₹50,000
+  Horizon      : 3 yr  (default)
+════════════════════════════════════════════════════════════════════════
+
+  [Loading datasets…]
+  [Datasets loaded]
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 1 — Raw Bank Records (as stored in CSV)
+────────────────────────────────────────────────────────────────────────
+
+  Customer  : CUS_0x11ae
+  Months    : 4 record(s) found
+
+  [September]
+    Month                                  September
+    Age                                    22.00
+    Occupation                             Architect
+    Annual_Income                          14,550.52
+    Monthly_Inhand_Salary                  1,392.54
+    Num_Bank_Accounts                      7
+    Num_Credit_Card                        10
+    Outstanding_Debt                       4,444.99
+    Credit_Utilization_Ratio               37.31
+    Amount_invested_monthly                44.73
+    Monthly_Balance                        258.61
+    Num_of_Delayed_Payment                 20.00
+    Credit_Mix                             Bad
+    Payment_Behaviour                      High_spent_Small_value_payments
+
+  [October]
+    Month                                  October
+    Age                                    22.00
+    Occupation                             Architect
+    Annual_Income                          14,550.52
+    Monthly_Inhand_Salary                  1,392.54
+    Num_Bank_Accounts                      7
+    Num_Credit_Card                        10
+    Outstanding_Debt                       4,444.99
+    Credit_Utilization_Ratio               26.02
+    Amount_invested_monthly                nan
+    Monthly_Balance                        227.83
+    Num_of_Delayed_Payment                 20.00
+    Credit_Mix                             Bad
+    Payment_Behaviour                      Low_spent_Small_value_payments
+
+  [November]
+    Month                                  November
+    Age                                    22.00
+    Occupation                             Architect
+    Annual_Income                          14,550.52
+    Monthly_Inhand_Salary                  1,392.54
+    Num_Bank_Accounts                      7
+    Num_Credit_Card                        10
+    Outstanding_Debt                       4,444.99
+    Credit_Utilization_Ratio               35.88
+    Amount_invested_monthly                120.20
+    Monthly_Balance                        213.14
+    Num_of_Delayed_Payment                 20.00
+    Credit_Mix                             Bad
+    Payment_Behaviour                      Low_spent_Small_value_payments
+
+  [December]
+    Month                                  December
+    Age                                    22.00
+    Occupation                             Architect
+    Annual_Income                          14,550.52
+    Monthly_Inhand_Salary                  nan
+    Num_Bank_Accounts                      7
+    Num_Credit_Card                        10
+    Outstanding_Debt                       4,444.99
+    Credit_Utilization_Ratio               33.00
+    Amount_invested_monthly                160.29
+    Monthly_Balance                        173.05
+    Num_of_Delayed_Payment                 21.00
+    Credit_Mix                             _
+    Payment_Behaviour                      Low_spent_Small_value_payments
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 2 — Feature Engineering (Normalised Risk Features)
+────────────────────────────────────────────────────────────────────────
+
+  ── Income & Savings
+    Annual_Income_norm                     0.0363
+    Monthly_Inhand_Salary_norm             0.0651
+    Investment_Ratio                       0.3696
+    Savings_Rate                           0.9656
+
+  ── Debt & Credit Burden
+    Debt_Burden_Ratio                      0.4787
+    EMI_Income_Ratio                       0.0230
+    Credit_Utilization_Ratio               0.5028
+    Interest_Rate_norm                     0.7273
+
+  ── Behavioural Signals
+    Delay_Score                            0.6638
+    Credit_Mix_Score                       0.1250
+    Spending_Behaviour_Score               0.0917
+    Num_Bank_Accounts_norm                 0.6364
+
+  ── Temporal & Profile
+    Age_Risk_Proxy                         0.8947
+    Occupation_Stability_Score             0.8810
+    Credit_History_Score                   0.3138
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 3 — Risk Scoring & Labelling (Bell-Curve Quantile Binning)
+────────────────────────────────────────────────────────────────────────
+
+  ── PCA PC1 Risk Score computation
+    Formula  : sign_factor × pca.transform(MinMaxScaled(X))[:, 0]
+    Raw score: -0.8190  (population range: 0 – 1)
+
+  ── Bell-curve quantile bins (SEBI-aligned population distribution)
+    Bin          Percentile range       Population share    
+    --------------------------------------------------------
+    Very_Low     0 – 12.5 %             12.5 %  (low-risk tail)  ◄
+    Low          12.5 – 37.5 %          25.0 %              
+    Medium       37.5 – 62.5 %          25.0 %  (centre)    
+    High         62.5 – 87.5 %          25.0 %              
+    Very_High    87.5 – 100 %           12.5 %  (high-risk tail)
+
+  ── Result
+  → Risk Score                             -0.8190
+  → Risk Label                             Very_Low
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 4 — Multi-Metric Risk Matrix (4 Orthogonal Dimensions)
+────────────────────────────────────────────────────────────────────────
+
+  ── Dimension scores (normalised 0.00 – 1.00, higher = higher risk capacity)
+
+    Financial_Capacity         [████░░░░░░░░░░░░░░░░]  0.250
+                                └─ Income, savings, investments — how much can be invested
+
+    Behavioral_Tolerance       [██░░░░░░░░░░░░░░░░░░]  0.143
+                                └─ Debt behaviour, delays, utilisation — attitude toward risk
+
+    Time_Horizon               [██░░░░░░░░░░░░░░░░░░]  0.105
+/Users/chaitanya/Downloads/Submission/Code/20Feb26/src/recommender.py:52: UserWarning: catboost not installed.  Install with: pip install catboost
+Ensemble will skip CatBoost (optional enhancement).
+  from src.ensemble_recommender import score_funds_ensemble, is_ensemble_trained
+                                └─ Age, credit history, occupation stability — capacity to wait
+
+    Credit_Health              [█████░░░░░░░░░░░░░░░]  0.288
+                                └─ Credit mix, payment patterns, interest burden — financial discipline
+
+
+  ── Composite (equal-weight average of 4 dimensions)
+    Composite_Risk_Score       [███░░░░░░░░░░░░░░░░░]  0.197
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 5 — FL Model Inference (RiskMLP Neural Network)
+────────────────────────────────────────────────────────────────────────
+
+  ── Architecture
+    Model     : RiskMLP  (15→256→128→64→32→5, GELU, residual)
+    Training  : FocalLoss(γ=2.0) + Label-Smoothing(0.05)
+    Privacy   : Differentially-private FL  (ε=0.4862, δ=1e-5)  [Excellent ε<1]
+
+  ── Softmax class probabilities
+    High         [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0047
+    Low          [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0744
+    Medium       [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0045
+    Very_High    [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0119
+    Very_Low     [████████████████████████████████████░░░░]  0.9045  ◄ predicted
+
+  ── FL model prediction
+  → Predicted Risk Class (model)           Very_Low
+  → Population-based Label (rule)          Very_Low
+
+    Agreement check : ✓ AGREE
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 6 — Fund Recommendations  (Core-Satellite per Horizon)
+────────────────────────────────────────────────────────────────────────
+
+  ── Equity–Debt glide path (3-year SEBI-aligned allocation)
+    Horizon      Equity %     Debt %      
+    ------------------------------------
+    3 yr         50%          50%         
+
+  ── Horizon: 3yr
+    Equity allocation : 0%
+    Debt  allocation  : 100%
+
+    [Core]  80% weight  →  ₹40,000
+      1. Axis Overnight Fund                                      [Debt/Debt Scheme - Overnigh]  [Not_Eligible]
+      2. Kotak Arbitrage Fund                                     [Hybrid/Hybrid Scheme - Arbitr]  [Not_Eligible]
+      3. ADITYA BIRLA SUN LIFE ARBITRAGE FUND                     [Hybrid/Hybrid Scheme - Arbitr]  [Not_Eligible]
+
+    [Growth]  20% weight  →  ₹10,000
+      1. Axis Liquid Fund                                         [Debt/Debt Scheme - Liquid F]  [Not_Eligible]
+      2. DSP Liquidity Fund                                       [Debt/Debt Scheme - Liquid F]  [Not_Eligible]
+      3. ICICI Prudential Money Market Fund                       [Debt/Debt Scheme - Money Ma]  [Not_Eligible]
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 7 — GenAI Explanation  (LLM  →  Rule-Based Fallback)
+────────────────────────────────────────────────────────────────────────
+
+  User context (privacy-safe): A Architect with Very Low risk appetite, looking to invest ₹[amount].
+
+  Generating explanations (may take a few seconds)...
+
+You are a SEBI-registered investment advisor. Act as a professional wealth manager for a 'Very_Low' risk investor with a 3yr horizon. Context: Indian market, current interest rate cycle, and latest debt tax laws.
+
+Funds to be recommended by you(summary):
+  - Core (80%, Very_Low tier): Axis Overnight Fund & Kotak Arbitrage Fund
+  - Growth (20%, Low tier): Axis Liquid Fund & DSP Liquidity Fund
+Asset Allocation: 0% Equity | 100% Debt
+
+Task: Write exactly 4 paragraphs (under 160 words total) focusing on:
+1. Mention funds to be recommended and latest details about it
+2. Strategic Fit: Why this split optimizes the risk-adjusted return (Sharpe Ratio) for a 3yr period in India.
+3. Fund Selection Logic: Mention the specific funds, highlighting their credit quality (e.g., AAA/Sovereign) or AUM stability rather than just names.
+4. Architecture: How the Core (yield), Stability (liquidity), and Growth (alpha) tiers prevent emotional selling during market dips.
+Constraint: No preamble, no bullets, professional tone, no other suggestions, strictly under 160 words.
+
+  ── Horizon: 3yr  [provider: rule_based]
+    **3yr Portfolio — Very_Low Risk**  A 3-year horizon allows
+    moderate equity exposure for inflation-beating returns while a
+    strong debt allocation cushions against market corrections.
+    **Allocation — 0% Equity / 100% Debt:** Core (Very_Low, 80%): Axis
+    Overnight Fund & Kotak Arbitrage Fund | Growth (Low, 20%): Axis
+    Liquid Fund & DSP Liquidity Fund  **Core-Satellite Logic:** The
+    Core (60%) anchors the portfolio in the Very_Low tier for primary
+    returns. The Stability satellite (20%) adds a downside buffer via
+    a conservative tier, while the Growth satellite (20%) captures
+    upside from a higher risk tier. This three-bracket structure
+    reduces single-tier concentration risk and is aligned with
+    BlackRock's Core-Satellite framework and Markowitz diversification
+    principles.
+
+
+────────────────────────────────────────────────────────────────────────
+  SUMMARY
+────────────────────────────────────────────────────────────────────────
+  → Customer                               CUS_0x11ae
+  → Occupation                             Architect
+  → Risk Score                             -0.8190
+  → Risk Label (rules)                     Very_Low
+  → Risk Label (FL model)                  Very_Low
+  → Investment Amount                      ₹50,000
+  → Horizon                                3 yr
+  → Explanation provider                   Groq / OpenRouter / HF / rule-based
+  → Elapsed                                12.0 s
+
+════════════════════════════════════════════════════════════════════════
+  Demo complete.
+════════════════════════════════════════════════════════════════════════
+

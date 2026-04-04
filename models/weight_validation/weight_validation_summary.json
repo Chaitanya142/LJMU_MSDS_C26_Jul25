@@ -1,0 +1,22 @@
+{
+  "lr_val_acc": 0.9858,
+  "lr_sign_alignment": "15/15",
+  "lr_alignment_pct": 100.0,
+  "lr_mismatches": [],
+  "xgb_val_acc": 0.9329,
+  "rho_gain": 0.95,
+  "p_gain": 0.0,
+  "rho_shap": 0.95,
+  "p_shap": 0.0,
+  "shap_available": false,
+  "sens_n_trials": 500,
+  "sens_mean_max_dev_pp": 3.89,
+  "sens_p95_max_dev_pp": 6.97,
+  "baseline_dist_pct": {
+    "Very_Low": 12.5,
+    "Low": 25.0,
+    "Medium": 25.0,
+    "High": 25.0,
+    "Very_High": 12.5
+  }
+}

@@ -1,0 +1,205 @@
+{
+  "distributed_loss": {
+    "1": 0.23652301793076566,
+    "2": 0.27399230363511534,
+    "3": 0.2205061606433223,
+    "4": 0.24417625788207248,
+    "5": 0.264507404678923,
+    "6": 0.22996343833663943,
+    "7": 0.2620853959658422,
+    "8": 0.21264237038461034,
+    "9": 0.23645060549998906,
+    "10": 0.22531806716660896,
+    "11": 0.21447311039872013,
+    "12": 0.2217850879966136,
+    "13": 0.20748825075493463,
+    "14": 0.2787961416131573,
+    "15": 0.23211944562686615
+  },
+  "round_accuracy": {
+    "1": 0.9528888888888889,
+    "2": 0.9324444444444444,
+    "3": 0.9564444444444444,
+    "4": 0.9546666666666667,
+    "5": 0.9351111111111111,
+    "6": 0.9617777777777777,
+    "7": 0.9271111111111111,
+    "8": 0.9671111111111111,
+    "9": 0.9528888888888889,
+    "10": 0.9537777777777777,
+    "11": 0.9582222222222222,
+    "12": 0.9466666666666667,
+    "13": 0.9662222222222222,
+    "14": 0.9253333333333333,
+    "15": 0.9537777777777777
+  },
+  "round_entropy": {
+    "1": 1.569,
+    "2": 1.2118,
+    "3": 1.5072,
+    "4": 1.4789,
+    "5": 1.3988,
+    "6": 1.2763,
+    "7": 1.1586,
+    "8": 1.4463,
+    "9": 1.255,
+    "10": 1.3244,
+    "11": 1.22,
+    "12": 1.1963,
+    "13": 1.0775,
+    "14": 0.834,
+    "15": 1.4839
+  },
+  "round_drift": {
+    "1": {
+      "n_clients": 965,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0311,
+      "min_cosine": 0.0043,
+      "mu_effective": 0.01,
+      "alpha_round": 1.5,
+      "drift_mu_boost": 1.0
+    },
+    "2": {
+      "n_clients": 961,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.9601,
+      "min_cosine": 0.9348,
+      "mu_effective": 0.009,
+      "alpha_round": 1.414,
+      "drift_mu_boost": 1.0
+    },
+    "3": {
+      "n_clients": 961,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0313,
+      "min_cosine": 0.0073,
+      "mu_effective": 0.0081,
+      "alpha_round": 1.329,
+      "drift_mu_boost": 1.0
+    },
+    "4": {
+      "n_clients": 942,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0317,
+      "min_cosine": 0.0079,
+      "mu_effective": 0.00729,
+      "alpha_round": 1.243,
+      "drift_mu_boost": 1.0
+    },
+    "5": {
+      "n_clients": 955,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0315,
+      "min_cosine": 0.0073,
+      "mu_effective": 0.00656,
+      "alpha_round": 1.157,
+      "drift_mu_boost": 1.0
+    },
+    "6": {
+      "n_clients": 950,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.9598,
+      "min_cosine": 0.9345,
+      "mu_effective": 0.0059,
+      "alpha_round": 1.071,
+      "drift_mu_boost": 1.0
+    },
+    "7": {
+      "n_clients": 963,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.9604,
+      "min_cosine": 0.9348,
+      "mu_effective": 0.00531,
+      "alpha_round": 0.986,
+      "drift_mu_boost": 1.0
+    },
+    "8": {
+      "n_clients": 963,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0312,
+      "min_cosine": 0.0034,
+      "mu_effective": 0.00478,
+      "alpha_round": 0.9,
+      "drift_mu_boost": 1.0
+    },
+    "9": {
+      "n_clients": 951,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0316,
+      "min_cosine": 0.0091,
+      "mu_effective": 0.0043,
+      "alpha_round": 0.814,
+      "drift_mu_boost": 1.0
+    },
+    "10": {
+      "n_clients": 981,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.9594,
+      "min_cosine": 0.9345,
+      "mu_effective": 0.00387,
+      "alpha_round": 0.729,
+      "drift_mu_boost": 1.0
+    },
+    "11": {
+      "n_clients": 955,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0314,
+      "min_cosine": 0.0079,
+      "mu_effective": 0.00349,
+      "alpha_round": 0.643,
+      "drift_mu_boost": 1.0
+    },
+    "12": {
+      "n_clients": 960,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0315,
+      "min_cosine": 0.0084,
+      "mu_effective": 0.00314,
+      "alpha_round": 0.557,
+      "drift_mu_boost": 1.0
+    },
+    "13": {
+      "n_clients": 937,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.9601,
+      "min_cosine": 0.9345,
+      "mu_effective": 0.00282,
+      "alpha_round": 0.471,
+      "drift_mu_boost": 1.0
+    },
+    "14": {
+      "n_clients": 951,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0316,
+      "min_cosine": 0.0064,
+      "mu_effective": 0.00254,
+      "alpha_round": 0.386,
+      "drift_mu_boost": 1.0
+    },
+    "15": {
+      "n_clients": 960,
+      "n_high_drift": 0,
+      "drift_fraction": 0.0,
+      "mean_cosine": 0.0315,
+      "min_cosine": 0.0063,
+      "mu_effective": 0.00229,
+      "alpha_round": 0.3,
+      "drift_mu_boost": 1.0
+    }
+  }
+}

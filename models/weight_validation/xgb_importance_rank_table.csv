@@ -1,0 +1,16 @@
+,Gain_rank,SHAP_rank,Design_rank,Gain_imp,SHAP_imp,Design_|w|
+Credit_Mix_Score,1,1,1,0.3813,0.3813,0.1672
+Interest_Rate_norm,2,2,2,0.1221,0.1221,0.1331
+Monthly_Inhand_Salary_norm,3,3,6,0.0978,0.0978,0.0803
+Credit_History_Score,4,4,3,0.0619,0.0619,0.1137
+Num_Bank_Accounts_norm,5,5,4,0.0534,0.0534,0.1097
+Annual_Income_norm,6,6,7,0.0514,0.0514,0.0669
+Delay_Score,7,7,5,0.0511,0.0511,0.105
+Debt_Burden_Ratio,8,8,9,0.0487,0.0487,0.0522
+Age_Risk_Proxy,9,9,8,0.0328,0.0328,0.0569
+EMI_Income_Ratio,10,10,12,0.0256,0.0256,0.0201
+Spending_Behaviour_Score,11,11,10,0.0211,0.0211,0.0415
+Savings_Rate,12,12,13,0.0189,0.0189,0.0194
+Credit_Utilization_Ratio,13,13,11,0.0125,0.0125,0.0207
+Investment_Ratio,14,14,14,0.012,0.012,0.0107
+Occupation_Stability_Score,15,15,15,0.0095,0.0095,0.0027

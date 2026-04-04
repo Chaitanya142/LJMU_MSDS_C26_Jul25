@@ -1,0 +1,8 @@
+Model	Val F1	CV F1	FL?	DP?
+RiskMLP (CrossEntropy)	0.9522	0.9522	✓	✓
+SVM	0.9648	0.9546	✗	✗
+VotingEnsemble	0.9074	0.9050	✗	✗
+XGBoost	0.8716	0.8720	✗	✗
+DensityClassifier	0.8267	0.8267	✗	✗
+RandomForest	0.8272	0.8212	✗	✗
+DecisionTree	0.7463	0.7346	✗	✗

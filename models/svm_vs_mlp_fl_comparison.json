@@ -1,0 +1,43 @@
+{
+  "RiskMLP_FL": {
+    "model": "RiskMLP (4-layer MLP + CrossEntropyLoss)",
+    "fl_compatible": true,
+    "dp_compatible": true,
+    "dp_mechanism": "gradient-level DP-SGD",
+    "final_macro_f1": 0.949,
+    "final_accuracy": 0.9515,
+    "final_round_acc": 0.9422,
+    "mean_round_loss": 0.176479,
+    "mean_round_entropy": 1.3346,
+    "n_params": "~73K",
+    "per_class_f1": {
+      "Very_Low": 0.9469,
+      "Low": 0.9554,
+      "Medium": 0.9638,
+      "High": 0.9522,
+      "Very_High": 0.9267
+    }
+  },
+  "SVM_FL": {
+    "model": "LinearSVM-FL (SGD modified_huber + FedAvg)",
+    "fl_compatible": true,
+    "dp_compatible": true,
+    "dp_mechanism": "weight-update perturbation (equiv. gradient-level)",
+    "final_macro_f1": 0.3328,
+    "final_accuracy": 0.4384,
+    "final_round_acc": 0.136,
+    "mean_round_loss": 1.080846,
+    "mean_round_entropy": 1.3346,
+    "n_params": "~80",
+    "per_class_f1": {
+      "Very_Low": 0.2413,
+      "Low": 0.6323,
+      "Medium": 0.1921,
+      "High": 0.4746,
+      "Very_High": 0.1238
+    }
+  },
+  "winner": "RiskMLP_FL",
+  "f1_delta": 0.6162,
+  "verdict": "RiskMLP-FL outperforms LinearSVM-FL on macro F1 \u2014 non-linear interactions in the 15-feature risk score require MLP depth. LinearSVM-FL demonstrates FL+DP feasibility for simpler baselines."
+}

@@ -1,0 +1,698 @@
+/Users/chaitanya/Downloads/Submission/Code/20Feb26/demo_three_users.py:293: UserWarning: [TER] Matched 9290/16376 funds (56.7%) to real SEBI TER [code=0, name+cat=9237, name=53]; 7086 imputed [category=6668, global=418]
+  mf_df   = load_mutual_funds()
+
+════════════════════════════════════════════════════════════════════════
+  SMART FUND ADVISOR — Three-User End-to-End Proof Demo
+════════════════════════════════════════════════════════════════════════
+  This demo runs the complete 7-stage investment advisory pipeline for
+  three customers from the held-out validation set, covering Very_Low,
+  Medium, and Very_High risk brackets.
+
+  Holdout set: 625 customers (5% of 12,500) — zero training/FL exposure
+
+  #   Customer ID    Bracket      Name                      Age         Amount
+  ────────────────────────────────────────────────────────────────────────
+  1   CUS_0x11ae     Very_Low     Xiaoyi Shaou               22  ₹      50,000
+  2   CUS_0x1096     Medium       Edward Krudyk              43  ₹     500,000
+  3   CUS_0x102d     Very_High    Neil Chatterjeex           31  ₹   2,000,000
+
+  [Loading datasets…]
+  [Datasets loaded — processing each user now]
+
+════════════════════════════════════════════════════════════════════════
+  USER: CUS_0x11ae  |  Expected bracket: Very_Low  |  Amount: ₹50,000
+════════════════════════════════════════════════════════════════════════
+  Demo holdout : YES — never seen in training or FL
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 1 — Raw Bank Records (as stored in CSV)
+────────────────────────────────────────────────────────────────────────
+
+  Customer  : CUS_0x11ae
+  Months    : 4 record(s) found
+
+  [September]
+    Month                                  September
+    Age                                    22.00
+    Occupation                             Architect
+    Annual_Income                          14,550.52
+    Monthly_Inhand_Salary                  1,392.54
+    Num_Bank_Accounts                      7
+    Num_Credit_Card                        10
+    Outstanding_Debt                       4,444.99
+    Credit_Utilization_Ratio               37.31
+    Amount_invested_monthly                44.73
+    Monthly_Balance                        258.61
+    Num_of_Delayed_Payment                 20.00
+    Credit_Mix                             Bad
+    Payment_Behaviour                      High_spent_Small_value_payments
+
+  [October]
+    Month                                  October
+    Age                                    22.00
+    Occupation                             Architect
+    Annual_Income                          14,550.52
+    Monthly_Inhand_Salary                  1,392.54
+    Num_Bank_Accounts                      7
+    Num_Credit_Card                        10
+    Outstanding_Debt                       4,444.99
+    Credit_Utilization_Ratio               26.02
+    Amount_invested_monthly                nan
+    Monthly_Balance                        227.83
+    Num_of_Delayed_Payment                 20.00
+    Credit_Mix                             Bad
+    Payment_Behaviour                      Low_spent_Small_value_payments
+
+  [November]
+    Month                                  November
+    Age                                    22.00
+    Occupation                             Architect
+    Annual_Income                          14,550.52
+    Monthly_Inhand_Salary                  1,392.54
+    Num_Bank_Accounts                      7
+    Num_Credit_Card                        10
+    Outstanding_Debt                       4,444.99
+    Credit_Utilization_Ratio               35.88
+    Amount_invested_monthly                120.20
+    Monthly_Balance                        213.14
+    Num_of_Delayed_Payment                 20.00
+    Credit_Mix                             Bad
+    Payment_Behaviour                      Low_spent_Small_value_payments
+
+  [December]
+    Month                                  December
+    Age                                    22.00
+    Occupation                             Architect
+    Annual_Income                          14,550.52
+    Monthly_Inhand_Salary                  nan
+    Num_Bank_Accounts                      7
+    Num_Credit_Card                        10
+    Outstanding_Debt                       4,444.99
+    Credit_Utilization_Ratio               33.00
+    Amount_invested_monthly                160.29
+    Monthly_Balance                        173.05
+    Num_of_Delayed_Payment                 21.00
+    Credit_Mix                             _
+    Payment_Behaviour                      Low_spent_Small_value_payments
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 2 — Feature Engineering (Normalised Risk Features)
+────────────────────────────────────────────────────────────────────────
+
+  ── Income & Savings
+    Annual_Income_norm                     0.0363
+    Monthly_Inhand_Salary_norm             0.0651
+    Investment_Ratio                       0.3696
+    Savings_Rate                           0.9656
+
+  ── Debt & Credit Burden
+    Debt_Burden_Ratio                      0.4787
+    EMI_Income_Ratio                       0.0230
+    Credit_Utilization_Ratio               0.5028
+    Interest_Rate_norm                     0.7273
+
+  ── Behavioural Signals
+    Delay_Score                            0.6638
+    Credit_Mix_Score                       0.1250
+    Spending_Behaviour_Score               0.0917
+    Num_Bank_Accounts_norm                 0.6364
+
+  ── Temporal & Profile
+    Age_Risk_Proxy                         0.8947
+    Occupation_Stability_Score             0.8810
+    Credit_History_Score                   0.3138
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 3 — Risk Scoring & Labelling (Bell-Curve Quantile Binning)
+────────────────────────────────────────────────────────────────────────
+
+  ── PCA PC1 Risk Score computation
+    Formula  : sign_factor × pca.transform(MinMaxScaled(X))[:, 0]
+    Raw score: -0.8190  (population range: 0 – 1)
+
+  ── Bell-curve quantile bins (SEBI-aligned population distribution)
+    Bin          Percentile range       Population share    
+    --------------------------------------------------------
+    Very_Low     0 – 12.5 %             12.5 %  (low-risk tail)  ◄
+    Low          12.5 – 37.5 %          25.0 %              
+    Medium       37.5 – 62.5 %          25.0 %  (centre)    
+    High         62.5 – 87.5 %          25.0 %              
+    Very_High    87.5 – 100 %           12.5 %  (high-risk tail)
+
+  ── Result
+  → Risk Score                             -0.8190
+  → Risk Label                             Very_Low
+/Users/chaitanya/Downloads/Submission/Code/20Feb26/src/recommender.py:52: UserWarning: catboost not installed.  Install with: pip install catboost
+Ensemble will skip CatBoost (optional enhancement).
+  from src.ensemble_recommender import score_funds_ensemble, is_ensemble_trained
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 4 — Multi-Metric Risk Matrix (4 Orthogonal Dimensions)
+────────────────────────────────────────────────────────────────────────
+
+  ── Dimension scores (normalised 0.00 – 1.00, higher = higher risk capacity)
+
+    Financial_Capacity         [████░░░░░░░░░░░░░░░░]  0.250
+                                └─ Income, savings, investments — how much can be invested
+
+    Behavioral_Tolerance       [██░░░░░░░░░░░░░░░░░░]  0.143
+                                └─ Debt behaviour, delays, utilisation — attitude toward risk
+
+    Time_Horizon               [██░░░░░░░░░░░░░░░░░░]  0.105
+                                └─ Age, credit history, occupation stability — capacity to wait
+
+    Credit_Health              [█████░░░░░░░░░░░░░░░]  0.288
+                                └─ Credit mix, payment patterns, interest burden — financial discipline
+
+
+  ── Composite (equal-weight average of 4 dimensions)
+    Composite_Risk_Score       [███░░░░░░░░░░░░░░░░░]  0.197
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 5 — FL Model Inference (RiskMLP Neural Network)
+────────────────────────────────────────────────────────────────────────
+
+  ── Architecture
+    Model     : RiskMLP  (15→256→128→64→32→5, GELU, residual)
+    Training  : FocalLoss(γ=2.0) + Label-Smoothing(0.05)
+    Privacy   : Differentially-private FL  (ε=0.4862, δ=1e-5)  [Excellent ε<1]
+
+  ── Softmax class probabilities
+    High         [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0047
+    Low          [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0744
+    Medium       [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0045
+    Very_High    [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0119
+    Very_Low     [████████████████████████████████████░░░░]  0.9045  ◄ predicted
+
+  ── FL model prediction
+  → Predicted Risk Class (model)           Very_Low
+  → Population-based Label (rule)          Very_Low
+
+    Agreement check : ✓ AGREE
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 6 — Fund Recommendations  (Core-Satellite per Horizon)
+────────────────────────────────────────────────────────────────────────
+
+  ── Equity–Debt glide path (3-year SEBI-aligned allocation)
+    Horizon      Equity %     Debt %      
+    ------------------------------------
+    3 yr         50%          50%         
+
+  ── Horizon: 3yr
+    Equity allocation : 0%
+    Debt  allocation  : 100%
+
+    [Core]  80% weight  →  ₹40,000
+      1. Axis Overnight Fund                                      [Debt/Debt Scheme - Overnigh]  [Not_Eligible]
+      2. Kotak Arbitrage Fund                                     [Hybrid/Hybrid Scheme - Arbitr]  [Not_Eligible]
+      3. ADITYA BIRLA SUN LIFE ARBITRAGE FUND                     [Hybrid/Hybrid Scheme - Arbitr]  [Not_Eligible]
+
+    [Growth]  20% weight  →  ₹10,000
+      1. Axis Liquid Fund                                         [Debt/Debt Scheme - Liquid F]  [Not_Eligible]
+      2. DSP Liquidity Fund                                       [Debt/Debt Scheme - Liquid F]  [Not_Eligible]
+      3. ICICI Prudential Money Market Fund                       [Debt/Debt Scheme - Money Ma]  [Not_Eligible]
+
+
+────────────────────────────────────────────────────────────────────────
+  USER SUMMARY — CUS_0x11ae
+────────────────────────────────────────────────────────────────────────
+  → Expected bracket                       Very_Low
+  → Rule-based label                       Very_Low
+  → FL model prediction                    Very_Low
+  → Risk score                             -0.8190
+  → Top-class confidence                   0.9045
+  → Investment amount                      ₹50,000
+  → Elapsed (this user)                    2.6 s
+
+    Rule label matches expected bracket                  ✓ PASS
+    FL model matches expected bracket                    ✓ PASS
+    Rule and FL agree with each other                    ✓ PASS
+    FL confidence ≥ 0.70 (clear prediction)              ✓ PASS
+
+
+════════════════════════════════════════════════════════════════════════
+  USER: CUS_0x1096  |  Expected bracket: Medium  |  Amount: ₹500,000
+════════════════════════════════════════════════════════════════════════
+  Demo holdout : YES — never seen in training or FL
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 1 — Raw Bank Records (as stored in CSV)
+────────────────────────────────────────────────────────────────────────
+
+  Customer  : CUS_0x1096
+  Months    : 4 record(s) found
+
+  [September]
+    Month                                  September
+    Age                                    43.00
+    Occupation                             Lawyer
+    Annual_Income                          12,931.56
+    Monthly_Inhand_Salary                  1,348.63
+    Num_Bank_Accounts                      4
+    Num_Credit_Card                        4
+    Outstanding_Debt                       752.86
+    Credit_Utilization_Ratio               38.45
+    Amount_invested_monthly                90.51
+    Monthly_Balance                        303.77
+    Num_of_Delayed_Payment                 21.00
+    Credit_Mix                             Standard
+    Payment_Behaviour                      Low_spent_Medium_value_payments
+
+  [October]
+    Month                                  October
+    Age                                    43.00
+    Occupation                             Lawyer
+    Annual_Income                          12,931.56
+    Monthly_Inhand_Salary                  1,348.63
+    Num_Bank_Accounts                      4
+    Num_Credit_Card                        4
+    Outstanding_Debt                       752.86
+    Credit_Utilization_Ratio               29.52
+    Amount_invested_monthly                50.66
+    Monthly_Balance                        313.63
+    Num_of_Delayed_Payment                 nan
+    Credit_Mix                             Standard
+    Payment_Behaviour                      High_spent_Medium_value_payments
+
+  [November]
+    Month                                  November
+    Age                                    43.00
+    Occupation                             Lawyer
+    Annual_Income                          12,931.56
+    Monthly_Inhand_Salary                  1,348.63
+    Num_Bank_Accounts                      4
+    Num_Credit_Card                        4
+    Outstanding_Debt                       752.86
+    Credit_Utilization_Ratio               26.42
+    Amount_invested_monthly                47.34
+    Monthly_Balance                        356.94
+    Num_of_Delayed_Payment                 20.00
+    Credit_Mix                             _
+    Payment_Behaviour                      Low_spent_Small_value_payments
+
+  [December]
+    Month                                  December
+    Age                                    43.00
+    Occupation                             Lawyer
+    Annual_Income                          12,931.56
+    Monthly_Inhand_Salary                  1,348.63
+    Num_Bank_Accounts                      4
+    Num_Credit_Card                        4
+    Outstanding_Debt                       752.86
+    Credit_Utilization_Ratio               38.56
+    Amount_invested_monthly                20.99
+    Monthly_Balance                        343.29
+    Num_of_Delayed_Payment                 20.00
+    Credit_Mix                             Standard
+    Payment_Behaviour                      High_spent_Medium_value_payments
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 2 — Feature Engineering (Normalised Risk Features)
+────────────────────────────────────────────────────────────────────────
+
+  ── Income & Savings
+    Annual_Income_norm                     0.0279
+    Monthly_Inhand_Salary_norm             0.0618
+    Investment_Ratio                       0.0059
+    Savings_Rate                           0.9924
+
+  ── Debt & Credit Burden
+    Debt_Burden_Ratio                      0.0910
+    EMI_Income_Ratio                       0.0051
+    Credit_Utilization_Ratio               0.5128
+    Interest_Rate_norm                     0.2424
+
+  ── Behavioural Signals
+    Delay_Score                            0.4520
+    Credit_Mix_Score                       0.5000
+    Spending_Behaviour_Score               0.4222
+    Num_Bank_Accounts_norm                 0.3636
+
+  ── Temporal & Profile
+    Age_Risk_Proxy                         0.3421
+    Occupation_Stability_Score             0.9524
+    Credit_History_Score                   0.6263
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 3 — Risk Scoring & Labelling (Bell-Curve Quantile Binning)
+────────────────────────────────────────────────────────────────────────
+
+  ── PCA PC1 Risk Score computation
+    Formula  : sign_factor × pca.transform(MinMaxScaled(X))[:, 0]
+    Raw score: 0.0741  (population range: 0 – 1)
+
+  ── Bell-curve quantile bins (SEBI-aligned population distribution)
+    Bin          Percentile range       Population share    
+    --------------------------------------------------------
+    Very_Low     0 – 12.5 %             12.5 %  (low-risk tail)
+    Low          12.5 – 37.5 %          25.0 %              
+    Medium       37.5 – 62.5 %          25.0 %  (centre)      ◄
+    High         62.5 – 87.5 %          25.0 %              
+    Very_High    87.5 – 100 %           12.5 %  (high-risk tail)
+
+  ── Result
+  → Risk Score                             0.0741
+  → Risk Label                             Medium
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 4 — Multi-Metric Risk Matrix (4 Orthogonal Dimensions)
+────────────────────────────────────────────────────────────────────────
+
+  ── Dimension scores (normalised 0.00 – 1.00, higher = higher risk capacity)
+
+    Financial_Capacity         [█████░░░░░░░░░░░░░░░]  0.250
+                                └─ Income, savings, investments — how much can be invested
+
+    Behavioral_Tolerance       [██████████░░░░░░░░░░]  0.509
+                                └─ Debt behaviour, delays, utilisation — attitude toward risk
+
+    Time_Horizon               [█████████████░░░░░░░]  0.658
+                                └─ Age, credit history, occupation stability — capacity to wait
+
+    Credit_Health              [█████████████░░░░░░░]  0.670
+                                └─ Credit mix, payment patterns, interest burden — financial discipline
+
+
+  ── Composite (equal-weight average of 4 dimensions)
+    Composite_Risk_Score       [██████████░░░░░░░░░░]  0.522
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 5 — FL Model Inference (RiskMLP Neural Network)
+────────────────────────────────────────────────────────────────────────
+
+  ── Architecture
+    Model     : RiskMLP  (15→256→128→64→32→5, GELU, residual)
+    Training  : FocalLoss(γ=2.0) + Label-Smoothing(0.05)
+    Privacy   : Differentially-private FL  (ε=0.4862, δ=1e-5)  [Excellent ε<1]
+
+  ── Softmax class probabilities
+    High         [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0200
+    Low          [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0110
+    Medium       [█████████████████████████████████████░░░]  0.9383  ◄ predicted
+    Very_High    [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0132
+    Very_Low     [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0174
+
+  ── FL model prediction
+  → Predicted Risk Class (model)           Medium
+  → Population-based Label (rule)          Medium
+
+    Agreement check : ✓ AGREE
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 6 — Fund Recommendations  (Core-Satellite per Horizon)
+────────────────────────────────────────────────────────────────────────
+
+  ── Equity–Debt glide path (3-year SEBI-aligned allocation)
+    Horizon      Equity %     Debt %      
+    ------------------------------------
+    3 yr         50%          50%         
+
+  ── Horizon: 3yr
+    Equity allocation : 30%
+    Debt  allocation  : 70%
+
+    [Core]  60% weight  →  ₹300,000
+      1. Aditya Birla Sun Life Savings Fund                       [Debt/Debt Scheme - Ultra Sh]  [Not_Eligible]
+      2. ICICI Prudential Savings Fund                            [Debt/Debt Scheme - Low Dura]  [Not_Eligible]
+      3. Axis Money Market Fund                                   [Debt/Debt Scheme - Money Ma]  [Not_Eligible]
+
+    [Stability]  20% weight  →  ₹100,000
+      1. Axis Liquid Fund                                         [Debt/Debt Scheme - Liquid F]  [Not_Eligible]
+      2. DSP Liquidity Fund                                       [Debt/Debt Scheme - Liquid F]  [Not_Eligible]
+      3. ICICI Prudential Money Market Fund                       [Debt/Debt Scheme - Money Ma]  [Not_Eligible]
+
+    [Growth]  20% weight  →  ₹100,000
+      1. LIC MF Unit Linked Insurance Scheme (ULIS)               [Equity/Equity Scheme - ELSS]  [Eligible_No_Data]
+      2. LIC MF Unit Linked Insurance Scheme (ULIS)               [Equity/Equity Scheme - ELSS]  [Eligible_No_Data]
+      3. Kotak Debt Hybrid Fund                                   [Hybrid/Hybrid Scheme - Conser]  [Not_Eligible]
+
+
+────────────────────────────────────────────────────────────────────────
+  USER SUMMARY — CUS_0x1096
+────────────────────────────────────────────────────────────────────────
+  → Expected bracket                       Medium
+  → Rule-based label                       Medium
+  → FL model prediction                    Medium
+  → Risk score                             0.0741
+  → Top-class confidence                   0.9383
+  → Investment amount                      ₹500,000
+  → Elapsed (this user)                    2.8 s
+
+    Rule label matches expected bracket                  ✓ PASS
+    FL model matches expected bracket                    ✓ PASS
+    Rule and FL agree with each other                    ✓ PASS
+    FL confidence ≥ 0.70 (clear prediction)              ✓ PASS
+
+
+════════════════════════════════════════════════════════════════════════
+  USER: CUS_0x102d  |  Expected bracket: Very_High  |  Amount: ₹2,000,000
+════════════════════════════════════════════════════════════════════════
+  Demo holdout : YES — never seen in training or FL
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 1 — Raw Bank Records (as stored in CSV)
+────────────────────────────────────────────────────────────────────────
+
+  Customer  : CUS_0x102d
+  Months    : 4 record(s) found
+
+  [September]
+    Month                                  September
+    Age                                    31.00
+    Occupation                             Entrepreneur
+    Annual_Income                          89,064.52
+    Monthly_Inhand_Salary                  7,256.04
+    Num_Bank_Accounts                      5
+    Num_Credit_Card                        3
+    Outstanding_Debt                       648.36
+    Credit_Utilization_Ratio               24.11
+    Amount_invested_monthly                488.42
+    Monthly_Balance                        469.61
+    Num_of_Delayed_Payment                 5.00
+    Credit_Mix                             _
+    Payment_Behaviour                      Low_spent_Large_value_payments
+
+  [October]
+    Month                                  October
+    Age                                    31.00
+    Occupation                             Entrepreneur
+    Annual_Income                          89,064.52
+    Monthly_Inhand_Salary                  7,256.04
+    Num_Bank_Accounts                      5
+    Num_Credit_Card                        3
+    Outstanding_Debt                       648.36
+    Credit_Utilization_Ratio               28.32
+    Amount_invested_monthly                327.64
+    Monthly_Balance                        620.39
+    Num_of_Delayed_Payment                 5.00
+    Credit_Mix                             Good
+    Payment_Behaviour                      High_spent_Small_value_payments
+
+  [November]
+    Month                                  November
+    Age                                    31.00
+    Occupation                             Entrepreneur
+    Annual_Income                          89,064.52
+    Monthly_Inhand_Salary                  7,256.04
+    Num_Bank_Accounts                      5
+    Num_Credit_Card                        144
+    Outstanding_Debt                       648.36
+    Credit_Utilization_Ratio               37.43
+    Amount_invested_monthly                171.16
+    Monthly_Balance                        766.87
+    Num_of_Delayed_Payment                 4.00
+    Credit_Mix                             _
+    Payment_Behaviour                      !@9#%8
+
+  [December]
+    Month                                  December
+    Age                                    31.00
+    Occupation                             Entrepreneur
+    Annual_Income                          89,064.52
+    Monthly_Inhand_Salary                  7,256.04
+    Num_Bank_Accounts                      5
+    Num_Credit_Card                        3
+    Outstanding_Debt                       648.36
+    Credit_Utilization_Ratio               31.83
+    Amount_invested_monthly                114.26
+    Monthly_Balance                        813.77
+    Num_of_Delayed_Payment                 5.00
+    Credit_Mix                             Good
+    Payment_Behaviour                      High_spent_Large_value_payments
+
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 2 — Feature Engineering (Normalised Risk Features)
+────────────────────────────────────────────────────────────────────────
+
+  ── Income & Savings
+    Annual_Income_norm                     0.4215
+    Monthly_Inhand_Salary_norm             0.5076
+    Investment_Ratio                       0.0058
+    Savings_Rate                           0.9974
+
+  ── Debt & Credit Burden
+    Debt_Burden_Ratio                      0.0112
+    EMI_Income_Ratio                       0.0017
+    Credit_Utilization_Ratio               0.3632
+    Interest_Rate_norm                     0.0000
+
+  ── Behavioural Signals
+    Delay_Score                            0.0989
+    Credit_Mix_Score                       0.7500
+    Spending_Behaviour_Score               0.5389
+    Num_Bank_Accounts_norm                 0.4545
+
+  ── Temporal & Profile
+    Age_Risk_Proxy                         0.6579
+    Occupation_Stability_Score             0.9524
+    Credit_History_Score                   0.8971
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 3 — Risk Scoring & Labelling (Bell-Curve Quantile Binning)
+────────────────────────────────────────────────────────────────────────
+
+  ── PCA PC1 Risk Score computation
+    Formula  : sign_factor × pca.transform(MinMaxScaled(X))[:, 0]
+    Raw score: 0.6455  (population range: 0 – 1)
+
+  ── Bell-curve quantile bins (SEBI-aligned population distribution)
+    Bin          Percentile range       Population share    
+    --------------------------------------------------------
+    Very_Low     0 – 12.5 %             12.5 %  (low-risk tail)
+    Low          12.5 – 37.5 %          25.0 %              
+    Medium       37.5 – 62.5 %          25.0 %  (centre)    
+    High         62.5 – 87.5 %          25.0 %              
+    Very_High    87.5 – 100 %           12.5 %  (high-risk tail)  ◄
+
+  ── Result
+  → Risk Score                             0.6455
+  → Risk Label                             Very_High
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 4 — Multi-Metric Risk Matrix (4 Orthogonal Dimensions)
+────────────────────────────────────────────────────────────────────────
+
+  ── Dimension scores (normalised 0.00 – 1.00, higher = higher risk capacity)
+
+    Financial_Capacity         [███████████░░░░░░░░░]  0.589
+                                └─ Income, savings, investments — how much can be invested
+
+    Behavioral_Tolerance       [██████████████░░░░░░]  0.722
+                                └─ Debt behaviour, delays, utilisation — attitude toward risk
+
+    Time_Horizon               [██████░░░░░░░░░░░░░░]  0.342
+                                └─ Age, credit history, occupation stability — capacity to wait
+
+    Credit_Health              [█████████████████░░░]  0.872
+                                └─ Credit mix, payment patterns, interest burden — financial discipline
+
+
+  ── Composite (equal-weight average of 4 dimensions)
+    Composite_Risk_Score       [████████████░░░░░░░░]  0.631
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 5 — FL Model Inference (RiskMLP Neural Network)
+────────────────────────────────────────────────────────────────────────
+
+  ── Architecture
+    Model     : RiskMLP  (15→256→128→64→32→5, GELU, residual)
+    Training  : FocalLoss(γ=2.0) + Label-Smoothing(0.05)
+    Privacy   : Differentially-private FL  (ε=0.4862, δ=1e-5)  [Excellent ε<1]
+
+  ── Softmax class probabilities
+    High         [█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.2379
+    Low          [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0119
+    Medium       [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0075
+    Very_High    [████████████████████████████░░░░░░░░░░░░]  0.7219  ◄ predicted
+    Very_Low     [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  0.0208
+
+  ── FL model prediction
+  → Predicted Risk Class (model)           Very_High
+  → Population-based Label (rule)          Very_High
+
+    Agreement check : ✓ AGREE
+
+────────────────────────────────────────────────────────────────────────
+  STAGE 6 — Fund Recommendations  (Core-Satellite per Horizon)
+────────────────────────────────────────────────────────────────────────
+
+  ── Equity–Debt glide path (3-year SEBI-aligned allocation)
+    Horizon      Equity %     Debt %      
+    ------------------------------------
+    3 yr         50%          50%         
+
+  ── Horizon: 3yr
+    Equity allocation : 60%
+    Debt  allocation  : 40%
+
+    [Core]  80% weight  →  ₹1,600,000
+      1. HDFC Balanced Advantage Fund                             [Hybrid/Hybrid Scheme - Dynami]  [Benchmarked_With_Data]
+      2. JM Value Fund                                            [Equity/Equity Scheme - Value ]  [Benchmarked_With_Data]
+      3. JM Aggressive Hybrid Fund                                [Hybrid/Hybrid Scheme - Aggres]  [Benchmarked_With_Data]
+
+    [Stability]  20% weight  →  ₹400,000
+      1. LIC MF Unit Linked Insurance Scheme (ULIS)               [Equity/Equity Scheme - ELSS]  [Eligible_No_Data]
+      2. LIC MF Unit Linked Insurance Scheme (ULIS)               [Equity/Equity Scheme - ELSS]  [Eligible_No_Data]
+      3. Kotak Debt Hybrid Fund                                   [Hybrid/Hybrid Scheme - Conser]  [Not_Eligible]
+
+
+────────────────────────────────────────────────────────────────────────
+  USER SUMMARY — CUS_0x102d
+────────────────────────────────────────────────────────────────────────
+  → Expected bracket                       Very_High
+  → Rule-based label                       Very_High
+  → FL model prediction                    Very_High
+  → Risk score                             0.6455
+  → Top-class confidence                   0.7219
+  → Investment amount                      ₹2,000,000
+  → Elapsed (this user)                    1.9 s
+
+    Rule label matches expected bracket                  ✓ PASS
+    FL model matches expected bracket                    ✓ PASS
+    Rule and FL agree with each other                    ✓ PASS
+    FL confidence ≥ 0.70 (clear prediction)              ✓ PASS
+
+
+════════════════════════════════════════════════════════════════════════
+  CONSOLIDATED PROOF TABLE — All 3 Demo Users
+════════════════════════════════════════════════════════════════════════
+  Customer       Expected     Rule         FL Model       Score    Conf         Amount  Rule✓  FL✓    Agree 
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+  CUS_0x11ae     Very_Low     Very_Low     Very_Low     -0.8190  0.9045  ₹      50,000  ✓      ✓      ✓
+  CUS_0x1096     Medium       Medium       Medium        0.0741  0.9383  ₹     500,000  ✓      ✓      ✓
+  CUS_0x102d     Very_High    Very_High    Very_High     0.6455  0.7219  ₹   2,000,000  ✓      ✓      ✓
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  ── Automated Correctness Checks
+
+    All 3 rule-based labels match expected brackets      ✓ PASS
+    All 3 FL model predictions match expected brackets   ✓ PASS
+    Rule and FL agree for every user                     ✓ PASS
+    All 3 FL predictions have confidence ≥ 0.70          ✓ PASS
+    Risk scores are strictly ordered (VL < Med < VH)     ✓ PASS
+    Very_Low user has negative risk score (low-risk)     ✓ PASS
+    Very_High user has positive risk score (high-risk)   ✓ PASS
+    All 3 users receive distinct risk tier labels        ✓ PASS
+
+  Result : 8/8 checks PASSED
+  ════════════════════════════════════════════════════════════════════
+  ALL CHECKS PASSED — System correctly classifies users across the full risk spectrum.
+  ════════════════════════════════════════════════════════════════════
+
+  ── Timing
+    CUS_0x11ae      2.6 s
+    CUS_0x1096      2.8 s
+    CUS_0x102d      1.9 s
+    Total           16.0 s
+
+════════════════════════════════════════════════════════════════════════
+  Demo complete.
+════════════════════════════════════════════════════════════════════════
+
