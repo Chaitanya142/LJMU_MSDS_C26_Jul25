@@ -1,4 +1,4 @@
-# Smart Fund Advisor — System Architecture (v3.3)
+# Smart Fund Advisor — System Architecture 
 
 ## Overview
 
@@ -13,57 +13,6 @@ A privacy-preserving mutual fund recommendation system that:
 8. Integrates **FundPerf + Nifty500 benchmark data** to compute real benchmark-relative features (benchmark status, benchmark returns, excess returns, benchmark-relative consistency)
 9. **Integrates real TER data** (SEBI ter-of-mf-schemes.csv): 62.8% real coverage (9,004/14,330 funds); unmatched funds use category/global-median imputation with `ter_missing_flag` — no synthetic TER anywhere in the pipeline
 10. **Explains** recommendations using free LLMs: Groq (Llama-3.3 70B) → OpenRouter (Gemma 2 9B) → HuggingFace (Qwen 2.5 3B) → rule-based fallback
-
----
-
-## v3.3 Hardening Updates (TER + Consistency + Benchmark)
-
-1. **Real TER Integration**: TER matching runs in strict priority (scheme code → name+category → name-only). Unmatched funds use category/global-median imputation for modelling — marked with `ter_missing_flag` and `ter_source`. No synthetic TER is generated anywhere in the pipeline.
-2. **TER Penalty Down-weighting**: When TER is imputed (missing), the scoring penalty applied to expense ratio is halved to avoid over-penalising funds for which no TER data is available.
-3. **Forward-Looking Ensemble Target**: Training labels are built from a forward-looking panel `(scheme, as_of_date)` snapshots targeting next-3Y top-20% fund quality. 154,060 panel rows, positive-rate=22.1%.
-4. **Asset-Segment Ensembles**: Separate sub-models for equity (47,613 panel rows) vs non-equity (106,447 panel rows). Benchmark columns zeroed for non-benchmarked/non-equity funds.
-5. **Benchmark-Relative Consistency**: `consistency_1y` is computed as percentage of rolling 1Y windows beating Nifty500 TRI (where Nifty history is available), with positive-return fallback otherwise.
-6. **Data-Quality Mode Tracking**: Funds explicitly tracked as Mode A (full NAV history), B (FundPerf-only), C (low-information). Case C hotspot count logged per training run.
-7. **Recommendation Hardening**: Segment-aware shortlist balancing (Equity/Hybrid/Debt), `Not_Eligible` vs `Benchmarked_With_Data` vs `Eligible_No_Data` benchmark status handling, per-category AMC caps.
-
----
-
-## v3.4 Enhancement — Advanced Ensemble with Stacking Meta-Learner & Alpha Target
-
-**Performance Improvement: +54.8% R² (0.5606 → 0.8680 on test set)**
-
-1. **5-Model Base Ensemble**:
-   - **Random Forest**: 200 estimators, min_leaf_samples=5, min_split_samples=10
-   - **XGBoost**: 400 estimators, learning_rate=0.02, max_depth=6, alpha=0.05, lambda=0.5
-   - **LightGBM**: 400 estimators, learning_rate=0.02, max_depth=7, num_leaves=31, alpha=0.05, lambda=0.5
-   - **ExtraTreesRegressor**: 500 estimators (NEW), min_leaf_samples=5, min_split_samples=10
-   - **CatBoost**: 500 iterations, learning_rate=0.015, depth=7 (NEW, optional)
-
-2. **Ridge Stacking Meta-Learner (NEW)**:
-   - Base model predictions stacked: `[RF, XGB, LGBM, CatBoost, ExtraTrees]`
-   - Ridge regression (α=1.0) learns optimal weights: RF=+2.283, XGB=-0.098, LGBM=-0.132, ET=-1.100, CAT=0.0
-   - Meta-learner outperforms fixed weighted average: **R²=0.8680** vs 0.5606 baseline
-   - Achieved **RMSE reduction of 45.1%** (0.1509 vs ~0.275)
-
-3. **Target Engineering: Alpha (NEW)**:
-   - **Formula**: `α = Fund_Return_1Y - NIFTY500_TRI_Return_1Y - TER_Penalty`
-   - Measures direct excess return vs benchmark, discounted for costs
-   - More interpretable and signal-rich than synthetic quality score
-   - Fallback to quality target if NAV history unavailable
-
-4. **New Feature - regime_beta (42nd feature)**:
-   - **Formula**: `regime_beta = excess_return_1y / volatility_1yr` (clipped to [-2.0, 2.0])
-   - Proxy for systematic risk exposure beyond categorical tiers
-   - Strong signal: correlation with excess_return_1y = r=0.8436
-   - Enables risk regime responsiveness via learned model coefficients
-
-5. **Backward Compatibility & Graceful Degradation**:
-   - CatBoost optional (failing gracefully if not installed)
-   - Meta-learner auto-detected (fallback to weighted ensemble if unavailable)
-   - Feature alignment auto-reindexed in inference
-   - All 16 system tests pass with enhanced ensemble ✓
-
----
 
 ## Pipeline Flow
 Why not Deep Leaning and only standard machine learning
