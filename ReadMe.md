@@ -5,67 +5,6 @@
 
 ---
 
-## What's New in v3.2 (Real Benchmark Integration)
-
-| Feature | Description |
-|---------|-------------|
-| **FundPerf + Nifty500 Integration** | CRISIL FundPerf Excel snapshots + Nifty500 TRI CSVs are ingested as real benchmark data |
-| **Benchmark-Aware Recommendation Inputs** | Added `benchmarked_flag`, `benchmark_status`, benchmark returns, and excess return fields (`fund - benchmark`) |
-| **Riskometer Tier Override** | Official FundPerf Riskometer mapping now overrides keyword tier where available |
-| **Reduced Synthetic Dependence** | Recommendation scoring and ensemble target now prefer real return/excess-return signals, with synthetic logic retained only as fallback |
-| **Benchmark Coverage Metric** | Notebook 06 includes a benchmark-readiness metric (coverage of benchmarked funds and 3Y excess-return availability) |
-
----
-
-## What's New in v3.3 (Recommendation Hardening)
-
-| Feature | Description |
-|---------|-------------|
-| **TER Join Hardening** | Real TER now uses priority matching (`Scheme_Code` → `name+category` → `name`); unmatched funds use category/global-median imputation for modeling, with explicit audit tags and `ter_missing_flag` |
-| **Forward-Looking Ensemble Target** | FundPerf fallback target now emphasizes recent 1Y and excess returns, then calibrates score confidence using benchmark data quality and FundPerf recency |
-| **Asset-Segment-Aware Ranking** | `recommend_funds()` now performs segment-aware shortlist construction (Equity/Hybrid/Debt) before category + AMC caps to reduce single-segment crowding |
-| **Benchmark Data Quality Controls** | Added `benchmark_data_quality`, `fundperf_data_quality`, `fundperf_recency_days`, and stronger `benchmark_status` states (`Benchmarked_With_Data`, `Eligible_No_Data`, `Not_Eligible`) |
-| **Pipeline Visibility** | `train.py` now reports TER real-data coverage and benchmark-ready fund coverage during Step 7 |
-
----
-
-## What's New in v3
-
-| Feature | Description |
-|---------|-------------|
-| **Multi-Metric Risk Matrix** | 4-dimension risk decomposition (Financial Capacity, Behavioral Tolerance, Time Horizon, Credit Health) — SEBI suitability compliant |
-| **Horizon-Based Recommendations** | Different fund allocations for 1yr / 3yr / 5yr / 10yr+ investment horizons following SEBI glide-path |
-| **Core-Satellite Portfolio** | 60% core (user's tier) + 20% stability (tier below) + 20% growth (tier above) — BlackRock-inspired diversification |
-| **LLM Upgrade** | Groq Llama-3.3-70B, OpenRouter Gemma-2-9B, HuggingFace Qwen-2.5-3B — all free tier |
-| **3-Model Ensemble** | XGBoost (0.40) + RandomForest (0.35) + LightGBM (0.25) fund scoring |
-| **15-Feature Engineering** | 3 new v2 features (EMI_Income_Ratio, Savings_Rate, Credit_History_Score) |
-| **13 System Tests** | Up from 10 — new tests for risk matrix, horizon recs, core-satellite |
-| **Two-Step Fund Risk Classification** | `compute_fund_risk_bands()`: per-category z-score → P20/P40/P60/P80 bands → SEBI floor/ceiling clamp (`CATEGORY_RISK_BOUNDS`, 43 entries); 14,330 funds via NAV history, 2,016 via keyword fallback |
-| **100% Fund Category Coverage** | `RISK_TO_FUND_CATEGORIES` rewritten with 52 keywords; all pre-SEBI-2018 labels, ETF, FoF, Solution-Oriented, Credit Risk, Contra, Focused mapped — 0 unmapped funds |
-| **AMC Diversity Enforcement** | `recommend_funds()` pre-caps each AMC at `ceil(top_n × 0.40)` slots; `allocate_portfolio()` uses iterative convergent loop for weight-cap compliance |
-| **FundPerf/Nifty Benchmark Features** | Real-data features attached by `benchmark_features.py`; cached to `models/fund_benchmark_features.csv` |
-
----
-
-## What's New in v3.1 (Latest)
-
-| Improvement | Code Location | Description |
-|-------------|--------------|-------------|
-| **A1 — FedAvg ablation** | `train.py`, `fl_simulation.py` | `--algorithm fedavg\|fedprox` flag; µ=0 disables proximal term for ablation |
-| **A2 — Adaptive Dirichlet α** | `fl_simulation.py` | α schedule 1.5→0.3 (curriculum: easy-to-hard non-IID) across waves/rounds |
-| **A3 — Active drift response** | `fl_simulation.py` | drift_fraction > 30% → auto-boost µ × 1.5 in next round |
-| **A6 — Spearman ρ logging** | `fl_simulation.py` | Per-wave rank correlation between pseudo-labels and oracle labels |
-| **B1 — Recency-weighted CAGR** | `ensemble_recommender.py` | Quality target = `(2×cagr_1yr + cagr_3yr)/3` blend |
-| **B2 — Shannon diversity entropy** | `recommender.py` | Measures category diversity of final fund selection; output columns added |
-| **B4 — Per-category AMC cap** | `recommender.py` | Max 2 funds per Scheme_Category before per-AMC 40% cap |
-| **B5 — Recovery time metric** | `nav_history.py` | Median calendar days to recover from a 5%+ drawdown; new NAV metric |
-| **C1 — JSON prompt injection** | `gpt_explainer.py` | Structured JSON output (summary/rationale/recommendation) with fallback parser |
-| **C2 — Risk-class few-shot** | `gpt_explainer.py` | One example per risk tier prepended to every prompt for tone alignment |
-| **C3 — TTL response cache** | `gpt_explainer.py` | 1-hour in-memory LLM response cache (MD5 key); avoids duplicate API calls |
-| **Subplot labels (A)(B)(C)** | `src/utils.py` + all src files + all notebooks | `label_subplots()` helper adds bottom-centre panel letters to all multi-panel figures |
-
----
-
 ## System Architecture
 
 ```
@@ -353,7 +292,7 @@ Ref: SEBI Circular SEBI/HO/IMD/DF2/CIR/P/2019/17; Grable & Lytton (1999)
 
 ---
 
-## Horizon-Based Fund Recommendations (v3)
+## Horizon-Based Fund Recommendations 
 
 Different investment horizons warrant different asset allocations. The system implements a SEBI-aligned glide-path matrix:
 
@@ -401,7 +340,7 @@ Ref: BlackRock "Core-Satellite Investing" (2018); Vanguard "Diversification" (20
 
 ---
 
-## LLM Provider Stack (v3)
+## LLM Provider Stack 
 
 | Priority | Provider | Model | Params | Benchmark | Cost |
 |----------|----------|-------|--------|-----------|------|
@@ -597,11 +536,14 @@ Funds ranked by **ensemble score** (XGB+RF+LGBM, 19 features); fallback: `0.7 ×
 
 > *Smart Fund Advisor: A Privacy-Preserving Federated Learning System for  
 > Risk-Aware Mutual Fund Recommendations*  
-> February 2026
 
 ## Dataset
-https://www.kaggle.com/datasets/khanmdsaifullahanjar/bank-user-dataset
-https://github.com/InertExpert2911/Mutual_Fund_Data/tree/main
+o https://www.kaggle.com/datasets/tharunreddy2911/mutual-fund-data
+o https://github.com/InertExpert2911/Mutual_Fund_Data
+o https://www.niftyindices.com/reports/historical-data
+o https://www.amfiindia.com/ter-of-mf-schemes
+o https://www.amfiindia.com/otherdata/fund-performance
+o https://www.kaggle.com/datasets/khanmdsaifullahanjar/bank-user-dataset
 
 ## Sample Run Command
 python train.py --skip-cluster --incremental > output.txt  
