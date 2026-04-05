@@ -1,7 +1,7 @@
 # Smart Fund Advisor
 
 > **Federated-Learning-based Risk Appetite Assessment + Mutual Fund Recommender**  
-> *Privacy-Preserving Personalized Financial Advisory (v3.2)*
+> *Privacy-Preserving Personalized Financial Advisory*
 
 ---
 
@@ -12,9 +12,9 @@
 │                              CENTRAL SERVER                                  │
 │                                                                              │
 │  ┌──────────────────────┐    ┌────────────────────────────────────────────┐ │
-│  │  RiskMLP              │    │  Mutual Fund Recommendation Engine (v3)    │ │
+│  │  RiskMLP              │    │  Mutual Fund Recommendation Engine     │ │
 │  │  (global weights)     │◄FL─│  ┌──────────────────────────────────────┐ │ │
-│  │  15→256→128→64→32→5   │    │  │ XGB + RF + LightGBM Ensemble (v2)   │ │ │
+│  │  15→256→128→64→32→5   │    │  │ XGB + RF + LightGBM + ExtraTrees Ensemble │ │ │
 │  │  GELU + Residual      │    │  │ 19 features (12 base + 7 from NAV)   │ │ │
 │  │  CrossEntropyLoss         │    │  │ Real-return target (CAGR/Sharpe/DD)  │ │ │
 │  └──────────────────────┘    │  └──────────────────────────────────────┘ │ │
@@ -82,35 +82,12 @@ Implementation matches:
 | LLM stack | Llama-3.3-70B → Gemma-2-9B → Qwen-2.5-3B → rule-based | Best free models: 70B for reasoning, 9B for instruction-following, 3B for no-API fallback |
 | Clustering | KMeans on **temperature-softmax vectors** (T=0.2) | Silhouette 0.24 → **0.9560** using learned risk-space representations (DB=0.0668, Purity=0.9488) |
 | NAV history | **21M-row parquet** chunked row-group reader | ~500 MB; scanned in ~14s; ref date auto-resolved from parquet max-date |
-
----
-
-## Evaluation Results
-
-| # | Metric | Threshold | Result | Status |
-|---|--------|-----------|--------|--------|
-| 1 | Cluster Silhouette (temperature-softmax embeddings) | ≥ 0.80 | **0.9560** | ✅ PASS |
-| 2 | Macro F1 (FL global model, pseudo-label incremental mode) | > 0.80 | **0.9439** | ✅ PASS |
-| 3 | DP Privacy (ε, δ) — Privacy Amplification tight bounds | formal guarantee | **ε=0.4862, δ=1e-5** | ✅ PASS |
-| 4 | FL Loss Stability (prediction change central vs FL) | < 10% | **0.32%** | ✅ PASS |
-| 5 | GenAI Fund Explanation Correctness | ≥ 75% | **100%** | ✅ PASS |
-| 6 | Brier Score (Model Calibration) | < 0.10 | **0.0932** | ✅ PASS |
-| 7 | Accuracy Parity Ratio (Age Fairness) | ≥ 0.90 | **0.9882** | ✅ PASS |
-| 8 | FL-Central Accuracy Gap | < 2.0 pp | **0.1600 pp** | ✅ PASS |
-
-**8/8 evaluation metrics pass (incremental pseudo-label FL, 5 waves × 3 rounds). System tests: 16/16 pass (v3.3).**  
-*Central model: 95.45% val accuracy (5-class, val_acc=0.9545 at epoch 18/40). FL global model: 94.35% accuracy, macro F1=0.9439.*  
-*Cluster silhouette improved from 0.8427 → 0.9560 (DB=0.0668, Purity=0.9488) with temperature-softmax(T=0.2) embeddings.*  
-*Privacy: ε=0.4862, δ=1e-5 (Excellent, ε<1) — Gaussian σ=1.1, Mironov tight amplification bounds.*  
-*Ensemble (forward panel, 46 features, 154,060 panel rows): RF R²=0.8378, XGB R²=0.3145, LGBM R²=0.3648.*  
-*TER coverage: 62.8% real (9,004/14,330 funds), remainder category/global-median imputed. Benchmark-ready: 15.6% (2,232/14,330).*
-
 ---
 
 ## Project Structure
 
 ```
-20Feb26/
+LJMU_MSDS_C26_JUL25/
 ├── environment.yml                   # conda environment spec
 ├── config.py                         # all hyper-parameters & paths
 ├── train.py                          # full 8-step pipeline CLI runner
